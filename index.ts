@@ -37,13 +37,11 @@ const tokenPanel = new BoxRenderable(renderer, {
   id: "token-panel",
   title: " 🔑 Discord Token ",
 });
-
 const channelIDPanel = new BoxRenderable(renderer, {
   ...panelDefaults,
   id: "channel-id-panel",
   title: " # Channel ID ",
 });
-
 const downloadLocationPanel = new BoxRenderable(renderer, {
   ...panelDefaults,
   id: "download-location-panel",
@@ -57,13 +55,11 @@ const tokenInput = new InputRenderable(renderer, {
   id: "token-input",
   placeholder: "Enter your Discord token...",
 });
-
 const channelIDInput = new InputRenderable(renderer, {
   ...inputDefaults,
   id: "channel-id-input",
   placeholder: "Enter channel ID...",
 });
-
 const downloadLocationInput = new InputRenderable(renderer, {
   ...inputDefaults,
   id: "download-location-input",
@@ -83,14 +79,11 @@ function onSubmit(value: string) {
 
 tokenInput.on(InputRenderableEvents.CHANGE, (_value) => {});
 tokenInput.on(InputRenderableEvents.ENTER, onSubmit);
-
 channelIDInput.on(InputRenderableEvents.CHANGE, (_value) => {});
 channelIDInput.on(InputRenderableEvents.ENTER, onSubmit);
-
 downloadLocationInput.on(InputRenderableEvents.CHANGE, (_value) => {});
 downloadLocationInput.on(InputRenderableEvents.ENTER, onSubmit);
 
-// --- Composition ---
 tokenPanel.add(tokenInput);
 channelIDPanel.add(channelIDInput);
 downloadLocationPanel.add(downloadLocationInput);
