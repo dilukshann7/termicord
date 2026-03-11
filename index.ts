@@ -4,6 +4,7 @@ import {
   InputRenderable,
   InputRenderableEvents,
   TextRenderable,
+  type KeyEvent,
 } from "@opentui/core";
 
 const renderer = await createCliRenderer({ exitOnCtrlC: true });
@@ -68,9 +69,26 @@ const downloadLocationInput = new InputRenderable(renderer, {
 
 const hint = new TextRenderable(renderer, {
   id: "hint",
-  content: "  Tab to switch fields · Enter to confirm · Ctrl+C to exit",
+  content:
+    "  Tab · next field   Shift+Tab · prev field   Enter · confirm   Ctrl+C · exit",
   fg: "#4f545c",
 });
+
+const inputs = [tokenInput, channelIDInput, downloadLocationInput];
+let focusedIndex = 0;
+
+function focusAt(index: number) {
+  focusedIndex = (index + inputs.length) % inputs.length;
+  (inputs[focusedIndex] as InputRenderable).focus();
+}
+
+renderer.keyInput.on("keypress", (key: KeyEvent) => {
+  if (key.name === "tab") {
+    focusAt(key.shift ? focusedIndex - 1 : focusedIndex + 1);
+  }
+});
+
+focusAt(0);
 
 function onSubmit(value: string) {
   process.stdout.write(`\nSubmitted: ${value}\n`);
