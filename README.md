@@ -56,7 +56,7 @@ The entire terminal interface is driven by **`@opentui/core`**, which is built o
 
 ---
 
-## ♡ Architecture
+## Architecture
 
 ```
 discord-scraper/
