@@ -1,58 +1,48 @@
 <div align="center">
 
-<!-- ASCII Banner -->
-```
-██████╗    ██████╗      ██████╗ ██╗███████╗ ██████╗ ██████╗ ██████╗ ██████╗
-███████████████████╗     ██╔══██╗██║██╔════╝██╔════╝██╔═══██╗██╔══██╗██╔══██╗
-█████████████████████╗    ██║  ██║██║███████╗██║     ██║   ██║██████╔╝██║  ██║
-████╗   ██████╗   ███║    ██║  ██║██║╚════██║██║     ██║   ██║██╔══██╗██║  ██║
-╚███████████████████╔╝    ██████╔╝██║███████║╚██████╗╚██████╔╝██║  ██║██████╔╝
- ╚═███████████████╔═╝     ╚═════╝ ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝
-```
+<img src="public/discord-scraper.png" alt="discord-scraper logo">
 
 **A beautiful, terminal-native Discord attachment downloader**  
 *Built with TypeScript · Powered by Bun · UI rendered by OpenTUI*
 
 ---
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-a78bfa?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Runtime-Bun-f9a8d4?style=for-the-badge&logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript-8b5cf6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![OpenTUI](https://img.shields.io/badge/UI-OpenTUI-e879f9?style=for-the-badge&logo=zig&logoColor=white)](https://github.com/nicholasgasior/opentui)
+[![OpenTUI](https://img.shields.io/badge/UI-OpenTUI-e879f9?style=for-the-badge&logo=zig&logoColor=white)](https://github.com/anomalyco/opentui)
 [![Zig](https://img.shields.io/badge/Powered%20by-Zig-f0abfc?style=for-the-badge&logo=zig&logoColor=white)](https://ziglang.org)
 [![Discord API](https://img.shields.io/badge/Discord-API%20v10-c4b5fd?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/developers/docs/intro)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-86efac?style=for-the-badge&logo=git&logoColor=white)](https://github.com/dilukshann7/discord-scraper/pulls)
 
 </div>
 
 ---
 
-## ♡ Overview
+## Overview
 
 `discord-scraper` is a sleek, fully terminal-native tool to **bulk-download all attachments from any Discord channel** you have access to. It talks directly to the Discord REST API v10, handles rate-limiting gracefully, and wraps everything in a gorgeous animated TUI — no browser, no Electron, no nonsense.
 
-The interface is powered by **[OpenTUI](https://github.com/nicholasgasior/opentui)**, a Zig-native terminal UI library exposed to the JavaScript ecosystem via `@opentui/core`. This means pixel-perfect box rendering, smooth animations, mouse support, and focus management — all at near-native speed.
+The interface is powered by **[OpenTUI](https://github.com/anomalyco/opentui)**, a Zig-native terminal UI library exposed to the JavaScript ecosystem via `@opentui/core`. This means pixel-perfect box rendering, smooth animations, mouse support, and focus management — all at near-native speed.
 
 ---
 
-## ✦ Features
+## Features
 
 | Feature | Details |
 |---|---|
-| 🎨 **Animated TUI** | Staggered banner + cascading panel reveal on startup |
-| 📥 **Bulk Attachment Download** | Fetches every attachment from an entire channel history |
-| 🔁 **Auto Rate-Limit Handling** | Detects Discord 429 responses and backs off automatically |
-| 📁 **Per-Message Folders** | Optional mode to create one folder per message, named by date + author + snippet |
-| 🚫 **Extension Filtering** | Skip specific file types (e.g. `.jpg .png .gif`) before any download begins |
-| 🔴 **Abort Support** | Press `Esc` at any time to cleanly cancel an in-flight download |
-| 📋 **Live Log Tab** | Real-time timestamped log output in a scrollable panel |
-| 📐 **Responsive Layout** | Full-width banner on wide terminals, compact mode on narrow ones |
-| 🖱️ **Mouse Support** | Click the Download button directly |
-| ✅ **Duplicate Detection** | Skips files that already exist on disk |
+| **Animated TUI** | Staggered banner + cascading panel reveal on startup |
+| **Bulk Attachment Download** | Fetches every attachment from an entire channel history |
+| **Auto Rate-Limit Handling** | Detects Discord 429 responses and backs off automatically |
+| **Per-Message Folders** | Optional mode to create one folder per message, named by date + author + snippet |
+| **Extension Filtering** | Skip specific file types (e.g. `.jpg .png .gif`) before any download begins |
+| **Abort Support** | Press `Esc` at any time to cleanly cancel an in-flight download |
+| **Live Log Tab** | Real-time timestamped log output in a scrollable panel |
+| **Responsive Layout** | Full-width banner on wide terminals, compact mode on narrow ones |
+| **Mouse Support** | Click the Download button directly |
+| **Duplicate Detection** | Skips files that already exist on disk |
 
 ---
 
-## ♡ UI Powered by OpenTUI + Zig
+## UI Powered by OpenTUI + Zig
 
 The entire terminal interface is driven by **`@opentui/core`**, which is built on top of a **Zig**-native rendering engine. This gives the TUI:
 
