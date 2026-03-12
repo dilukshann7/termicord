@@ -92,7 +92,7 @@ discord-scraper/
 
 ---
 
-## ♡ Requirements
+## Requirements
 
 | Dependency | Version |
 |---|---|
@@ -104,7 +104,7 @@ discord-scraper/
 
 ---
 
-## ♡ Installation
+## Installation
 
 ```bash
 # 1. Clone the repository
@@ -120,7 +120,7 @@ bun run index.ts
 
 ---
 
-## ♡ Usage
+## Usage
 
 When the TUI launches, you will see four input fields and a checkbox:
 
@@ -130,7 +130,7 @@ When the TUI launches, you will see four input fields and a checkbox:
 | **Channel ID** | The numeric ID of the target channel |
 | **Download Location** | Local path where files will be saved (default: `./downloads`) |
 | **Extensions to Skip** | Space or comma-separated extensions to ignore (e.g. `.jpg .gif`) |
-| **☐ Folder per message** | When checked, each message gets its own named subfolder |
+| **Folder per message** | When checked, each message gets its own named subfolder |
 
 ### Keyboard Shortcuts
 
@@ -147,7 +147,7 @@ When the TUI launches, you will see four input fields and a checkbox:
 
 ---
 
-## ♡ How It Works
+## How It Works
 
 ### Message Pagination
 
@@ -167,7 +167,7 @@ Before writing any file, the engine checks `fs.existsSync(destPath)`. If the fil
 
 ---
 
-## ♡ Security Notes
+## Security Notes
 
 > ⚠️ **Your Discord token is sensitive.** Treat it like a password.
 
@@ -180,7 +180,7 @@ Before writing any file, the engine checks `fs.existsSync(destPath)`. If the fil
 
 ---
 
-## ♡ Contributing
+## Contributing
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change.
 
@@ -191,12 +191,12 @@ git checkout -b feat/my-improvement
 # Make changes, then push
 git push origin feat/my-improvement
 
-# Open a PR on GitHub ♡
+# Open a PR on GitHub
 ```
 
 ---
 
-## ♡ License
+## License
 
 Released under the [MIT License](./LICENSE).  
 Developed & maintained with ♡ by **[@dilukshann7](https://github.com/dilukshann7)**
