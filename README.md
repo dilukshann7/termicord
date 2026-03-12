@@ -106,10 +106,10 @@ termicord/
 
 ## Installation
 
-```bash
+```
 # 1. Clone the repository
-git clone https://github.com/dilukshann7/discord-scraper.git
-cd discord-scraper
+git clone https://github.com/dilukshann7/termicord.git
+cd termicord
 
 # 2. Install dependencies
 bun install
@@ -184,7 +184,7 @@ Before writing any file, the engine checks `fs.existsSync(destPath)`. If the fil
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change.
 
-```bash
+```
 # Fork → clone your fork → create a branch
 git checkout -b feat/my-improvement
 
