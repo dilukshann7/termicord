@@ -88,177 +88,440 @@ const infoPanel = new BoxRenderable(renderer, {
 const infoPanelLine1 = new TextRenderable(renderer, {
   id: "info-line-0",
   content: "v1.0.0  ·  MIT License",
-  fg: "#6366f1",
+  fg: c.transparent,
 });
-
 const infoPanelLine2 = new TextRenderable(renderer, {
   id: "info-line-1",
   content: "──────────────────────",
-  fg: "#7c3aed",
+  fg: c.transparent,
 });
-
 const infoPanelLine3 = new TextRenderable(renderer, {
   id: "info-line-2",
   content: "developed & maintained by",
-  fg: "#8b5cf6",
+  fg: c.transparent,
 });
-
 const infoPanelLine4 = new TextRenderable(renderer, {
   id: "info-line-3",
   content: " ♡  github / dilukshann7 ♡ ",
-  fg: "#a855f7",
-});
-
-const infoPanelLine5 = new TextRenderable(renderer, {
-  id: "info-line-4",
-  content: " (⌒ made for the public ⌒) ",
-  fg: "#c084fc",
+  fg: c.transparent,
 });
 
 infoPanel.add(infoPanelLine1);
 infoPanel.add(infoPanelLine2);
 infoPanel.add(infoPanelLine3);
 infoPanel.add(infoPanelLine4);
-infoPanel.add(infoPanelLine5);
-renderer.root.add(infoPanel);
 
-const panelDefaults = {
-  width: 120,
+const tabBar = new BoxRenderable(renderer, {
+  id: "tab-bar",
+  width: "100%" as `${number}%`,
   height: 3,
+  borderStyle: "single",
+  borderColor: c.dimBorder,
   paddingLeft: 1,
-  borderColor: "#5865F2",
-};
+  paddingRight: 1,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+});
+
+const tabConfig = new TextRenderable(renderer, {
+  id: "tab-config",
+  content: "  [ Config ]  ",
+  fg: c.lavender,
+});
+
+const tabLogs = new TextRenderable(renderer, {
+  id: "tab-logs",
+  content: "    Logs    ",
+  fg: c.dim,
+});
+
+tabBar.add(tabConfig);
+tabBar.add(tabLogs);
 
 const tokenPanel = new BoxRenderable(renderer, {
-  ...panelDefaults,
   id: "token-panel",
-  title: " # Discord Token ",
+  width: "100%" as `${number}%`,
+  height: 3,
+  paddingLeft: 1,
+  borderColor: c.violet,
+  title: " ♡ Discord Token ",
 });
 const channelIDPanel = new BoxRenderable(renderer, {
-  ...panelDefaults,
   id: "channel-id-panel",
-  title: " # Channel ID ",
+  width: "100%" as `${number}%`,
+  height: 3,
+  paddingLeft: 1,
+  borderColor: c.violet,
+  title: " ♡ Channel ID ",
 });
 const downloadLocationPanel = new BoxRenderable(renderer, {
-  ...panelDefaults,
   id: "download-location-panel",
-  title: " # Download Location ",
+  width: "100%" as `${number}%`,
+  height: 3,
+  paddingLeft: 1,
+  borderColor: c.violet,
+  title: " ♡ Download Location ",
 });
 const skipFilesInputPanel = new BoxRenderable(renderer, {
-  ...panelDefaults,
   id: "skip-files-input-panel",
-  title: " # Extenstions to Skip ",
+  width: "100%" as `${number}%`,
+  height: 3,
+  paddingLeft: 1,
+  borderColor: c.violet,
+  title: " ♡ Extensions to Skip ",
 });
 
-const inputDefaults = { width: 114 };
-
 const tokenInput = new InputRenderable(renderer, {
-  ...inputDefaults,
   id: "token-input",
+  width: "100%" as `${number}%`,
   placeholder: "Enter your Discord token...",
 });
 const channelIDInput = new InputRenderable(renderer, {
-  ...inputDefaults,
   id: "channel-id-input",
+  width: "100%" as `${number}%`,
   placeholder: "Enter channel ID...",
 });
 const downloadLocationInput = new InputRenderable(renderer, {
-  ...inputDefaults,
   id: "download-location-input",
+  width: "100%" as `${number}%`,
   placeholder: "Enter download location (e.g. ./downloads)...",
 });
 const skipFilesInput = new InputRenderable(renderer, {
-  ...inputDefaults,
   id: "skip-files-input",
+  width: "100%" as `${number}%`,
   placeholder: "Enter file extensions to skip (e.g. .jpg .png)...",
 });
-
-let checked = false;
-
-const checkbox = new TextRenderable(renderer, {
-  id: "checkbox",
-  content: "  [ ] Create a new folder for every message",
-  fg: "#4f545c",
-});
-
-const hintBar = new BoxRenderable(renderer, {
-  id: "hint-bar",
-  position: "absolute",
-  bottom: 0,
-  width: "100%",
-  height: 3,
-  borderStyle: "single",
-  borderColor: "#2a2d31",
-  paddingLeft: 2,
-  paddingRight: 2,
-  flexDirection: "column",
-  justifyContent: "center",
-  alignItems: "center",
-});
-
-const hint = new TextRenderable(renderer, {
-  id: "hint",
-  content:
-    "Tab · next field | Shift+Tab · prev field | Space · toggle checkbox | Enter · confirm | Ctrl+C · exit",
-  fg: "#4f545c",
-});
-
-const inputs = [tokenInput, channelIDInput, downloadLocationInput];
-let focusedIndex = 0;
-
-function updateCheckboxColor() {
-  checkbox.fg = focusedIndex === 3 ? "#5865F2" : "#4f545c";
-}
-
-function focusAt(index: number) {
-  focusedIndex = (index + 4) % 4;
-
-  if (focusedIndex < 3) {
-    inputs.forEach((inp) => inp.blur());
-    (inputs[focusedIndex] as InputRenderable).focus();
-  } else {
-    inputs.forEach((inp) => inp.blur());
-  }
-
-  updateCheckboxColor();
-}
-
-renderer.keyInput.on("keypress", (key: KeyEvent) => {
-  if (key.name === "tab") {
-    key.stopPropagation();
-    focusAt(key.shift ? focusedIndex - 1 : focusedIndex + 1);
-    return;
-  }
-
-  if (key.name === "space" && focusedIndex === 3) {
-    key.stopPropagation();
-    checked = !checked;
-    checkbox.content = `  [${checked ? "X" : " "}] Create a new folder for every message`;
-  }
-});
-
-focusAt(0);
-
-function onSubmit(value: string) {
-  process.stdout.write(`\nSubmitted: ${value}\n`);
-  process.exit(0);
-}
-
-tokenInput.on(InputRenderableEvents.ENTER, onSubmit);
-channelIDInput.on(InputRenderableEvents.ENTER, onSubmit);
-downloadLocationInput.on(InputRenderableEvents.ENTER, onSubmit);
-skipFilesInput.on(InputRenderableEvents.ENTER, onSubmit);
 
 tokenPanel.add(tokenInput);
 channelIDPanel.add(channelIDInput);
 downloadLocationPanel.add(downloadLocationInput);
 skipFilesInputPanel.add(skipFilesInput);
 
-renderer.root.add(titleBanner);
-renderer.root.add(tokenPanel);
-renderer.root.add(channelIDPanel);
-renderer.root.add(downloadLocationPanel);
-renderer.root.add(skipFilesInputPanel);
-renderer.root.add(checkbox);
-renderer.root.add(hintBar);
+let checked = false;
+
+const checkbox = new TextRenderable(renderer, {
+  id: "checkbox",
+  content: "  [ ] Create a new folder for every message",
+  fg: c.dim,
+});
+
+const downloadButton = new BoxRenderable(renderer, {
+  id: "download-button",
+  position: "absolute",
+  bottom: 3, // sits directly on top of the hint bar
+  width: "100%" as `${number}%`,
+  height: 3,
+  borderStyle: "double",
+  borderColor: c.softPink,
+  paddingLeft: 1,
+  paddingRight: 1,
+  flexDirection: "row",
+  justifyContent: "center",
+  alignItems: "center",
+});
+
+const downloadButtonText = new TextRenderable(renderer, {
+  id: "download-button-text",
+  content: "  ♡  Start Download  ♡  ",
+  fg: c.pink,
+});
+
+downloadButton.add(downloadButtonText);
+
+const logsBox = new BoxRenderable(renderer, {
+  id: "logs-box",
+  width: "100%" as `${number}%`,
+  height: logsHeight(),
+  borderStyle: "single",
+  borderColor: c.dimBorder,
+  title: " ♡ Logs ",
+  paddingLeft: 1,
+  paddingRight: 1,
+  flexDirection: "column",
+  overflow: "scroll",
+});
+
+const logsText = new TextRenderable(renderer, {
+  id: "logs-text",
+  content: "  Waiting for download to start...",
+  fg: c.dim,
+});
+
+logsBox.add(logsText);
+
+const hintBar = new BoxRenderable(renderer, {
+  id: "hint-bar",
+  position: "absolute",
+  bottom: 0,
+  width: "100%" as `${number}%`,
+  height: 3,
+  borderStyle: "single",
+  borderColor: c.dimBorder,
+  paddingLeft: 2,
+  paddingRight: 2,
+  flexDirection: "row",
+  justifyContent: "center",
+  alignItems: "center",
+});
+
+const hintFull =
+  "Q/E · switch tabs  |  Tab · next field  |  Shift+Tab · prev  |  Space · toggle  |  Enter · download  |  Ctrl+C · exit";
+const hintCompact =
+  "Q/E tabs | Tab/S-Tab fields | Space toggle | Enter go | ^C quit";
+
+const hint = new TextRenderable(renderer, {
+  id: "hint",
+  content: termW() >= 120 ? hintFull : hintCompact,
+  fg: c.dim,
+});
+
 hintBar.add(hint);
+
+type Tab = "config" | "logs";
+let activeTab: Tab = "config";
+
+const configChildren = [
+  tokenPanel,
+  channelIDPanel,
+  downloadLocationPanel,
+  skipFilesInputPanel,
+  checkbox,
+];
+
+function showTab(tab: Tab) {
+  if (activeTab === tab) return;
+  activeTab = tab;
+
+  tabConfig.fg = tab === "config" ? c.lavender : c.dim;
+  tabLogs.fg = tab === "logs" ? c.lavender : c.dim;
+  tabConfig.content = tab === "config" ? "  [ Config ]  " : "    Config    ";
+  tabLogs.content = tab === "logs" ? "  [ Logs ]  " : "    Logs    ";
+
+  if (tab === "config") {
+    logsBox.visible = false;
+    configChildren.forEach((child) => {
+      child.visible = true;
+    });
+    downloadButton.visible = true;
+    focusAt(0);
+  } else {
+    configChildren.forEach((child) => {
+      child.visible = false;
+    });
+    downloadButton.visible = false;
+    inputs.forEach((inp) => inp.blur());
+    logsBox.visible = true;
+  }
+}
+
+// 0-3 = inputs, 4 = checkbox
+const TOTAL_FIELDS = 5;
+const inputPanels = [
+  tokenPanel,
+  channelIDPanel,
+  downloadLocationPanel,
+  skipFilesInputPanel,
+];
+const inputs = [
+  tokenInput,
+  channelIDInput,
+  downloadLocationInput,
+  skipFilesInput,
+];
+
+let focusedIndex = 0;
+let animationDone = false;
+
+function updateFocusStyles() {
+  inputPanels.forEach((panel, i) => {
+    panel.borderColor = focusedIndex === i ? c.focus : c.violet;
+  });
+  checkbox.fg = focusedIndex === 4 ? c.focus : c.dim;
+}
+
+function focusAt(index: number) {
+  focusedIndex = ((index % TOTAL_FIELDS) + TOTAL_FIELDS) % TOTAL_FIELDS;
+  if (focusedIndex < 4) {
+    inputs.forEach((inp) => inp.blur());
+    (inputs[focusedIndex] as InputRenderable).focus();
+  } else {
+    inputs.forEach((inp) => inp.blur());
+  }
+  updateFocusStyles();
+}
+
+const logLines: string[] = [];
+
+function addLog(line: string) {
+  const now = new Date();
+  const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`;
+  logLines.push(`  [${ts}] ${line}`);
+  logsText.content = logLines.join("\n");
+  logsText.fg = c.green;
+}
+
+function startDownload() {
+  const token = (tokenInput as any).value ?? "";
+  const channel = (channelIDInput as any).value ?? "";
+  const location = (downloadLocationInput as any).value || "./downloads";
+  const skip = (skipFilesInput as any).value ?? "";
+
+  if (!token || !channel) {
+    addLog("✗ Missing required fields (token and channel ID).");
+    showTab("logs");
+    return;
+  }
+
+  addLog(`♡ Starting download...`);
+  addLog(
+    `  Token    : ${token.slice(0, 8)}${"*".repeat(Math.max(0, token.length - 8))}`,
+  );
+  addLog(`  Channel  : ${channel}`);
+  addLog(`  Location : ${location}`);
+  addLog(`  Skip ext : ${skip || "(none)"}`);
+  addLog(`  Folders  : ${checked ? "yes (one per message)" : "no"}`);
+  addLog(`──────────────────────────────────────────────`);
+  addLog(`  [placeholder] Fetching messages from channel...`);
+  addLog(`  [placeholder] 0 files downloaded so far.`);
+
+  showTab("logs");
+}
+
+function handleResize() {
+  if (animationDone) {
+    titleBanner.content = getBannerLines().join("\n");
+    infoPanel.visible = isWide();
+  }
+  logsBox.height = logsHeight();
+  hint.content = termW() >= 120 ? hintFull : hintCompact;
+}
+
+renderer.root.on(LayoutEvents.RESIZED, handleResize);
+
+renderer.keyInput.on("keypress", (key: KeyEvent) => {
+  if (!animationDone) return;
+
+  if (key.name === "q" || key.name === "Q") {
+    showTab("config");
+    return;
+  }
+  if (key.name === "e" || key.name === "E") {
+    showTab("logs");
+    return;
+  }
+
+  if (activeTab === "config") {
+    if (key.name === "tab") {
+      key.stopPropagation();
+      focusAt(key.shift ? focusedIndex - 1 : focusedIndex + 1);
+      return;
+    }
+    if (key.name === "space" && focusedIndex === 4) {
+      checked = !checked;
+      checkbox.content = `  [${checked ? "♡" : " "}] Create a new folder for every message`;
+    }
+  }
+});
+
+const onFieldEnter = () => startDownload();
+tokenInput.on(InputRenderableEvents.ENTER, onFieldEnter);
+channelIDInput.on(InputRenderableEvents.ENTER, onFieldEnter);
+downloadLocationInput.on(InputRenderableEvents.ENTER, onFieldEnter);
+skipFilesInput.on(InputRenderableEvents.ENTER, onFieldEnter);
+
+renderer.root.add(titleBanner);
+
+function animateBanner(onComplete: () => void) {
+  const lines = getBannerLines();
+  const revealedLines: string[] = lines.map(() => "");
+  lines.forEach((line, i) => {
+    setTimeout(() => {
+      revealedLines[i] = line;
+      titleBanner.content = revealedLines.join("\n");
+      if (i === lines.length - 1) onComplete();
+    }, i * 55);
+  });
+}
+
+animateBanner(() => {
+  if (isWide()) {
+    infoPanel.borderColor = c.purple;
+    infoPanelLine1.fg = c.transparent;
+    infoPanelLine2.fg = c.transparent;
+    infoPanelLine3.fg = c.transparent;
+    infoPanelLine4.fg = c.transparent;
+    renderer.root.add(infoPanel);
+    const id = 80;
+    setTimeout(() => {
+      infoPanelLine1.fg = c.lavender;
+    }, id * 1);
+    setTimeout(() => {
+      infoPanelLine2.fg = c.violet;
+    }, id * 2);
+    setTimeout(() => {
+      infoPanelLine3.fg = c.purple;
+    }, id * 3);
+    setTimeout(() => {
+      infoPanelLine4.fg = c.pink;
+    }, id * 4);
+  } else {
+    infoPanel.visible = false;
+    renderer.root.add(infoPanel);
+  }
+
+  tabBar.visible = false;
+  configChildren.forEach((child) => {
+    child.visible = false;
+  });
+  logsBox.visible = false;
+  downloadButton.visible = false;
+  hintBar.visible = false;
+
+  renderer.root.add(tabBar);
+  configChildren.forEach((child) => renderer.root.add(child));
+  renderer.root.add(logsBox);
+  renderer.root.add(downloadButton);
+  renderer.root.add(hintBar);
+
+  const pd = 120;
+  setTimeout(() => {
+    tabBar.visible = true;
+  }, pd * 1);
+  setTimeout(() => {
+    tokenPanel.visible = true;
+  }, pd * 2);
+  setTimeout(() => {
+    channelIDPanel.visible = true;
+  }, pd * 3);
+  setTimeout(() => {
+    downloadLocationPanel.visible = true;
+  }, pd * 4);
+  setTimeout(() => {
+    skipFilesInputPanel.visible = true;
+  }, pd * 5);
+  setTimeout(() => {
+    checkbox.visible = true;
+  }, pd * 6);
+  setTimeout(
+    () => {
+      downloadButton.visible = true;
+    },
+    pd * 6 + 120,
+  );
+  setTimeout(
+    () => {
+      hintBar.visible = true;
+    },
+    pd * 6 + 220,
+  );
+
+  setTimeout(
+    () => {
+      animationDone = true;
+      focusAt(0);
+      handleResize();
+    },
+    pd * 6 + 320,
+  );
+});
