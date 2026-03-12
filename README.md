@@ -1,7 +1,7 @@
 <div align="center">
 
 <img src="public/discord-scraper.png" alt="discord-scraper logo">
-
+<br>
 **A beautiful, terminal-native Discord attachment downloader**  
 *Built with TypeScript · Powered by Bun · UI rendered by OpenTUI*
 
