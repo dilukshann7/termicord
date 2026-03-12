@@ -11,6 +11,7 @@ export interface DownloadConfigRaw {
   outputDir: string;
   skipExtensions: string;
   foldersPerMessage: boolean;
+  saveTxt: boolean;
 }
 
 export interface DownloadHandle {
@@ -31,6 +32,7 @@ export function startDownloadTask(
     outputDir: config.outputDir || "./downloads",
     skipExtensions: parseSkipExtensions(config.skipExtensions),
     foldersPerMessage: config.foldersPerMessage,
+    saveTxt: config.saveTxt,
   };
 
   const progressCb: ProgressCallback = (evt) => {

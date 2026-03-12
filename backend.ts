@@ -10,6 +10,7 @@ export interface DownloadConfig {
   outputDir: string;
   skipExtensions: string[]; // e.g. [".jpg", ".png"]
   foldersPerMessage: boolean;
+  saveTxt: boolean;
 }
 
 export interface DownloadProgress {
@@ -245,8 +246,14 @@ export async function runDownload(
   onProgress: ProgressCallback,
   signal?: AbortSignal,
 ): Promise<void> {
-  const { token, channelId, outputDir, skipExtensions, foldersPerMessage } =
-    config;
+  const {
+    token,
+    channelId,
+    outputDir,
+    skipExtensions,
+    foldersPerMessage,
+    saveTxt,
+  } = config;
 
   // Validate
   if (!token.trim()) {
@@ -353,6 +360,30 @@ export async function runDownload(
         message: `  ✗ Cannot create folder: ${(err as Error).message}`,
       });
       continue;
+    }
+
+    if (saveTxt) {
+      const txtFileName = `${ts}_${author}_${snippet}.txt`;
+      const txtPath = path.join(folderPath, txtFileName);
+      try {
+        const txtContent = [
+          `Message ID : ${msg.id}`,
+          `Timestamp  : ${msg.timestamp}`,
+          `Author     : ${msg.author.username}`,
+          ``,
+          msg.content || "(no text content)",
+        ].join("\n");
+        fs.writeFileSync(txtPath, txtContent, "utf8");
+        onProgress({
+          type: "log",
+          message: `    📄 Saved message text: ${txtFileName}`,
+        });
+      } catch (err) {
+        onProgress({
+          type: "error",
+          message: `    ✗ Failed to save .txt: ${(err as Error).message}`,
+        });
+      }
     }
 
     for (const att of msg.attachments) {
