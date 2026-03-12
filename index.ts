@@ -237,7 +237,7 @@ const logsBox = new BoxRenderable(renderer, {
   height: logsHeight(),
   borderStyle: "single",
   borderColor: c.dimBorder,
-  title: " ♡ Logs ",
+  title: " Logs ",
   paddingLeft: 1,
   paddingRight: 1,
   flexDirection: "column",
