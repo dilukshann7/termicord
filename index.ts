@@ -201,10 +201,17 @@ downloadLocationPanel.add(downloadLocationInput);
 skipFilesInputPanel.add(skipFilesInput);
 
 let checked = false;
+let saveTxt = false;
 
 const checkbox = new TextRenderable(renderer, {
   id: "checkbox",
   content: "  [ ] Create a new folder for every message",
+  fg: c.dim,
+});
+
+const saveTxtCheckbox = new TextRenderable(renderer, {
+  id: "save-txt-checkbox",
+  content: "  [ ] Save message content as .txt file",
   fg: c.dim,
 });
 
@@ -289,6 +296,7 @@ const configChildren = [
   downloadLocationPanel,
   skipFilesInputPanel,
   checkbox,
+  saveTxtCheckbox,
 ];
 
 function showTab(tab: Tab) {
@@ -317,8 +325,8 @@ function showTab(tab: Tab) {
   }
 }
 
-// 0-3 = inputs, 4 = checkbox
-const TOTAL_FIELDS = 5;
+// 0-3 = inputs, 4 = checkbox, 5 = saveTxtCheckbox
+const TOTAL_FIELDS = 6;
 const inputPanels = [
   tokenPanel,
   channelIDPanel,
@@ -340,6 +348,7 @@ function updateFocusStyles() {
     panel.borderColor = focusedIndex === i ? c.focus : c.violet;
   });
   checkbox.fg = focusedIndex === 4 ? c.focus : c.dim;
+  saveTxtCheckbox.fg = focusedIndex === 5 ? c.focus : c.dim;
 }
 
 function focusAt(index: number) {
@@ -405,6 +414,7 @@ function startDownload() {
   addLog(`  Location : ${location}`);
   addLog(`  Skip ext : ${skip || "(none)"}`);
   addLog(`  Folders  : ${checked ? "yes (one per message)" : "no"}`);
+  addLog(`  Save .txt : ${saveTxt ? "yes" : "no"}`);
   addLog(`──────────────────────────────────────────────`);
 
   showTab("logs");
@@ -417,6 +427,7 @@ function startDownload() {
       outputDir: location,
       skipExtensions: skip,
       foldersPerMessage: checked,
+      saveTxt,
     },
     (line) => addLog(line),
   );
@@ -488,7 +499,11 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
       checked = !checked;
       checkbox.content = `  [${checked ? "♡" : " "}] Create a new folder for every message`;
     }
-    if (key.name === "return" && focusedIndex === 4) {
+    if (key.name === "space" && focusedIndex === 5) {
+      saveTxt = !saveTxt;
+      saveTxtCheckbox.content = `  [${saveTxt ? "♡" : " "}] Save message content as .txt file`;
+    }
+    if (key.name === "return" && (focusedIndex === 4 || focusedIndex === 5)) {
       startDownload();
     }
   }
@@ -581,6 +596,12 @@ animateBanner(() => {
   setTimeout(() => {
     checkbox.visible = true;
   }, pd * 6);
+  setTimeout(
+    () => {
+      saveTxtCheckbox.visible = true;
+    },
+    pd * 6 + 60,
+  );
   setTimeout(
     () => {
       downloadButton.visible = true;
