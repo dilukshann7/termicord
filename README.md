@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/discord-scraper.png" alt="discord-scraper logo">
+<img src="public/termicord.png" alt="termicord logo">
 <br />
 <h2>A beautiful, terminal-native Discord attachment downloader</h2>
 <p>Built with TypeScript · Powered by Bun · UI rendered by OpenTUI</p>
@@ -19,7 +19,7 @@
 
 ## Overview
 
-`discord-scraper` is a sleek, fully terminal-native tool to **bulk-download all attachments from any Discord channel** you have access to. It talks directly to the Discord REST API v10, handles rate-limiting gracefully, and wraps everything in a gorgeous animated TUI — no browser, no Electron, no nonsense.
+`termicord` is a sleek, fully terminal-native tool to **bulk-download all attachments from any Discord channel** you have access to. It talks directly to the Discord REST API v10, handles rate-limiting gracefully, and wraps everything in a gorgeous animated TUI — no browser, no Electron, no nonsense.
 
 The interface is powered by **[OpenTUI](https://github.com/anomalyco/opentui)**, a Zig-native terminal UI library exposed to the JavaScript ecosystem via `@opentui/core`. This means pixel-perfect box rendering, smooth animations, mouse support, and focus management — all at near-native speed.
 
@@ -59,7 +59,7 @@ The entire terminal interface is driven by **`@opentui/core`**, which is built o
 ## Architecture
 
 ```
-discord-scraper/
+termicord/
 ├── index.ts        # TUI shell — all UI logic, layout, key bindings, animation
 ├── middleware.ts   # Thin adapter — bridges raw config from the UI to the backend
 ├── backend.ts      # Core engine — Discord API calls, download logic, abort support
