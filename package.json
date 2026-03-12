@@ -1,8 +1,12 @@
 {
-  "name": "discord-scraper",
+  "name": "termicord",
+  "version": "1.0.0",
   "module": "index.ts",
   "type": "module",
-  "private": true,
+  "bin": {
+    "termicord": "./index.ts"
+  },
+  "private": false,
   "devDependencies": {
     "@types/bun": "latest"
   },
