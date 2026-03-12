@@ -401,12 +401,15 @@ export async function runDownload(
         continue;
       }
 
-      const destPath = path.join(folderPath, att.filename);
+      const safeFilename = foldersPerMessage
+        ? att.filename
+        : `${msg.id}_${att.filename}`;
+      const destPath = path.join(folderPath, safeFilename);
 
       if (fs.existsSync(destPath)) {
         onProgress({
           type: "file_skip",
-          message: `    ↩ Already exists: ${att.filename}`,
+          message: `    ↩ Already exists: ${safeFilename}`,
           currentFile: att.filename,
         });
         continue;
@@ -415,7 +418,7 @@ export async function runDownload(
       const sizeKb = Math.round(att.size / 1024);
       onProgress({
         type: "file_start",
-        message: `    ↓ ${att.filename} (${sizeKb} KB)`,
+        message: `    ↓ ${safeFilename} (${sizeKb} KB)`,
         currentFile: att.filename,
       });
 
@@ -424,8 +427,8 @@ export async function runDownload(
         downloaded++;
         onProgress({
           type: "file_done",
-          message: `    ✓ Saved: ${att.filename}`,
-          currentFile: att.filename,
+          message: `    ✓ Saved: ${safeFilename}`,
+          currentFile: safeFilename,
           filesDownloaded: downloaded,
           filesTotal,
           progress: Math.round((downloaded / filesTotal) * 100),
