@@ -76,7 +76,7 @@ const infoPanel = new BoxRenderable(renderer, {
   top: 1,
   right: 2,
   borderStyle: "double",
-  borderColor: "#7c3aed",
+  borderColor: c.transparent,
   paddingLeft: 2,
   paddingRight: 2,
   paddingTop: 0,
