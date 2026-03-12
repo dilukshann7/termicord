@@ -8,6 +8,8 @@ import {
   type KeyEvent,
 } from "@opentui/core";
 
+import { startDownloadTask, type DownloadHandle } from "./middleware";
+
 const renderer = await createCliRenderer({ exitOnCtrlC: true });
 
 const c = {
@@ -361,7 +363,29 @@ function addLog(line: string) {
   logsText.fg = c.green;
 }
 
+let activeDownload: DownloadHandle | null = null;
+let isDownloading = false;
+
+function setDownloading(active: boolean) {
+  isDownloading = active;
+  if (active) {
+    downloadButtonText.content = "  ♡  Downloading…  ♡  ";
+    downloadButtonText.fg = c.dimGreen;
+    downloadButton.borderColor = c.dimGreen;
+  } else {
+    downloadButtonText.content = "  ♡  Start Download  ♡  ";
+    downloadButtonText.fg = c.pink;
+    downloadButton.borderColor = c.softPink;
+  }
+}
+
 function startDownload() {
+  if (isDownloading) {
+    addLog("⚠ Download already in progress.");
+    showTab("logs");
+    return;
+  }
+
   const token = (tokenInput as any).value ?? "";
   const channel = (channelIDInput as any).value ?? "";
   const location = (downloadLocationInput as any).value || "./downloads";
@@ -382,10 +406,34 @@ function startDownload() {
   addLog(`  Skip ext : ${skip || "(none)"}`);
   addLog(`  Folders  : ${checked ? "yes (one per message)" : "no"}`);
   addLog(`──────────────────────────────────────────────`);
-  addLog(`  [placeholder] Fetching messages from channel...`);
-  addLog(`  [placeholder] 0 files downloaded so far.`);
 
   showTab("logs");
+  setDownloading(true);
+
+  activeDownload = startDownloadTask(
+    {
+      token,
+      channelId: channel,
+      outputDir: location,
+      skipExtensions: skip,
+      foldersPerMessage: checked,
+    },
+    (line) => addLog(line),
+  );
+
+  activeDownload.done.then(() => {
+    setDownloading(false);
+    activeDownload = null;
+  });
+}
+
+function abortDownload() {
+  if (activeDownload && isDownloading) {
+    activeDownload.abort();
+    addLog("⊘ Download aborted by user.");
+    setDownloading(false);
+    activeDownload = null;
+  }
 }
 
 function handleResize() {
