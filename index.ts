@@ -3,27 +3,71 @@ import {
   createCliRenderer,
   InputRenderable,
   InputRenderableEvents,
+  LayoutEvents,
   TextRenderable,
   type KeyEvent,
 } from "@opentui/core";
 
 const renderer = await createCliRenderer({ exitOnCtrlC: true });
 
+const c = {
+  lavender: "#c4b5fd",
+  purple: "#a78bfa",
+  violet: "#8b5cf6",
+  pink: "#f0abfc",
+  softPink: "#e879f9",
+  dim: "#6b7280",
+  dimBorder: "#374151",
+  focus: "#f9a8d4",
+  green: "#86efac",
+  dimGreen: "#4ade80",
+  transparent: "transparent",
+};
+
+function termW(): number {
+  return renderer.terminalWidth;
+}
+function termH(): number {
+  return renderer.terminalHeight;
+}
+function isWide(): boolean {
+  return termW() >= 120;
+}
+function isBannerFit(): boolean {
+  return termW() >= 84;
+}
+function logsHeight(): number {
+  return Math.max(6, termH() - 18);
+}
+
+const bannerLinesFull = [
+  "",
+  "    ██████╗    ██████╗      ██████╗ ██╗███████╗ ██████╗ ██████╗ ██████╗ ██████╗ ",
+  "   ███████████████████╗     ██╔══██╗██║██╔════╝██╔════╝██╔═══██╗██╔══██╗██╔══██╗",
+  "  █████████████████████╗    ██║  ██║██║███████╗██║     ██║   ██║██████╔╝██║  ██║",
+  "  ████╗   ██████╗   ███║    ██║  ██║██║╚════██║██║     ██║   ██║██╔══██╗██║  ██║",
+  "  ╚███████████████████╔╝    ██████╔╝██║███████║╚██████╗╚██████╔╝██║  ██║██████╔╝",
+  "   ╚═███████████████╔═╝     ╚═════╝ ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ",
+];
+
+const bannerLinesCompact = [
+  "",
+  "  ╔══════════════════════════╗",
+  "  ║   DISCORD  DOWNLOADER   ║",
+  "  ╚══════════════════════════╝",
+  "",
+];
+
+function getBannerLines(): string[] {
+  return isBannerFit() ? bannerLinesFull : bannerLinesCompact;
+}
+
 const titleBanner = new TextRenderable(renderer, {
   id: "title-banner",
-  content: [
-    "",
-    "    ██████╗    ██████╗      ██████╗ ██╗███████╗ ██████╗ ██████╗ ██████╗ ██████╗ ",
-    "   ███████████████████╗     ██╔══██╗██║██╔════╝██╔════╝██╔═══██╗██╔══██╗██╔══██╗",
-    "  █████████████████████╗    ██║  ██║██║███████╗██║     ██║   ██║██████╔╝██║  ██║",
-    "  ████╗   ██████╗   ███║    ██║  ██║██║╚════██║██║     ██║   ██║██╔══██╗██║  ██║",
-    "  ╚███████████████████╔╝    ██████╔╝██║███████║╚██████╗╚██████╔╝██║  ██║██████╔╝",
-    "   ╚═███████████████╔═╝     ╚═════╝ ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ",
-    "",
-    "  ────────────────────────────  Channel  Downloader  ───────────────────────────",
-    "",
-  ].join("\n"),
-  fg: "#5865F2",
+  content: getBannerLines()
+    .map(() => "")
+    .join("\n"),
+  fg: c.lavender,
 });
 
 const infoPanel = new BoxRenderable(renderer, {
