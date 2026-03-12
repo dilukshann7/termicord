@@ -88,7 +88,7 @@ const panelDefaults = {
 const tokenPanel = new BoxRenderable(renderer, {
   ...panelDefaults,
   id: "token-panel",
-  title: " 🔑 Discord Token ",
+  title: " # Discord Token ",
 });
 const channelIDPanel = new BoxRenderable(renderer, {
   ...panelDefaults,
@@ -98,7 +98,12 @@ const channelIDPanel = new BoxRenderable(renderer, {
 const downloadLocationPanel = new BoxRenderable(renderer, {
   ...panelDefaults,
   id: "download-location-panel",
-  title: " 📁 Download Location ",
+  title: " # Download Location ",
+});
+const skipFilesInputPanel = new BoxRenderable(renderer, {
+  ...panelDefaults,
+  id: "skip-files-input-panel",
+  title: " # Extenstions to Skip ",
 });
 
 const inputDefaults = { width: 114 };
