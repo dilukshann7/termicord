@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/termicord.png" alt="termicord logo">
+<img src="public/termicord.jpg" alt="termicord logo">
 <br />
 <h2>A beautiful, terminal-native Discord attachment downloader</h2>
 <p>Built with TypeScript · Powered by Bun · UI rendered by OpenTUI</p>
