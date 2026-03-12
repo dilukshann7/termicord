@@ -123,25 +123,73 @@ const downloadLocationInput = new InputRenderable(renderer, {
   id: "download-location-input",
   placeholder: "Enter download location (e.g. ./downloads)...",
 });
+const skipFilesInput = new InputRenderable(renderer, {
+  ...inputDefaults,
+  id: "skip-files-input",
+  placeholder: "Enter file extensions to skip (e.g. .jpg .png)...",
+});
+
+let checked = false;
+
+const checkbox = new TextRenderable(renderer, {
+  id: "checkbox",
+  content: "  [ ] Create a new folder for every message",
+  fg: "#4f545c",
+});
+
+const hintBar = new BoxRenderable(renderer, {
+  id: "hint-bar",
+  position: "absolute",
+  bottom: 0,
+  width: "100%",
+  height: 3,
+  borderStyle: "single",
+  borderColor: "#2a2d31",
+  paddingLeft: 2,
+  paddingRight: 2,
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+});
 
 const hint = new TextRenderable(renderer, {
   id: "hint",
   content:
-    "  Tab · next field   Shift+Tab · prev field   Enter · confirm   Ctrl+C · exit",
+    "Tab · next field | Shift+Tab · prev field | Space · toggle checkbox | Enter · confirm | Ctrl+C · exit",
   fg: "#4f545c",
 });
 
 const inputs = [tokenInput, channelIDInput, downloadLocationInput];
 let focusedIndex = 0;
 
+function updateCheckboxColor() {
+  checkbox.fg = focusedIndex === 3 ? "#5865F2" : "#4f545c";
+}
+
 function focusAt(index: number) {
-  focusedIndex = (index + inputs.length) % inputs.length;
-  (inputs[focusedIndex] as InputRenderable).focus();
+  focusedIndex = (index + 4) % 4;
+
+  if (focusedIndex < 3) {
+    inputs.forEach((inp) => inp.blur());
+    (inputs[focusedIndex] as InputRenderable).focus();
+  } else {
+    inputs.forEach((inp) => inp.blur());
+  }
+
+  updateCheckboxColor();
 }
 
 renderer.keyInput.on("keypress", (key: KeyEvent) => {
   if (key.name === "tab") {
+    key.stopPropagation();
     focusAt(key.shift ? focusedIndex - 1 : focusedIndex + 1);
+    return;
+  }
+
+  if (key.name === "space" && focusedIndex === 3) {
+    key.stopPropagation();
+    checked = !checked;
+    checkbox.content = `  [${checked ? "X" : " "}] Create a new folder for every message`;
   }
 });
 
