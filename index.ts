@@ -13,18 +13,70 @@ const titleBanner = new TextRenderable(renderer, {
   id: "title-banner",
   content: [
     "",
-    "  ██████╗ ██╗███████╗ ██████╗ ██████╗ ██████╗ ██████╗ ",
-    "  ██╔══██╗██║██╔════╝██╔════╝██╔═══██╗██╔══██╗██╔══██╗",
-    "  ██║  ██║██║███████╗██║     ██║   ██║██████╔╝██║  ██║",
-    "  ██║  ██║██║╚════██║██║     ██║   ██║██╔══██╗██║  ██║",
-    "  ██████╔╝██║███████║╚██████╗╚██████╔╝██║  ██║██████╔╝",
-    "  ╚═════╝ ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ",
+    "    ██████╗    ██████╗      ██████╗ ██╗███████╗ ██████╗ ██████╗ ██████╗ ██████╗ ",
+    "   ███████████████████╗     ██╔══██╗██║██╔════╝██╔════╝██╔═══██╗██╔══██╗██╔══██╗",
+    "  █████████████████████╗    ██║  ██║██║███████╗██║     ██║   ██║██████╔╝██║  ██║",
+    "  ████╗   ██████╗   ███║    ██║  ██║██║╚════██║██║     ██║   ██║██╔══██╗██║  ██║",
+    "  ╚███████████████████╔╝    ██████╔╝██║███████║╚██████╗╚██████╔╝██║  ██║██████╔╝",
+    "   ╚═███████████████╔═╝     ╚═════╝ ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ",
     "",
-    "  ─────────────────  Channel  Downloader  ─────────────────",
+    "  ────────────────────────────  Channel  Downloader  ───────────────────────────",
     "",
   ].join("\n"),
   fg: "#5865F2",
 });
+
+const infoPanel = new BoxRenderable(renderer, {
+  id: "info-panel",
+  position: "absolute",
+  top: 1,
+  right: 2,
+  borderStyle: "double",
+  borderColor: "#7c3aed",
+  paddingLeft: 2,
+  paddingRight: 2,
+  paddingTop: 0,
+  paddingBottom: 0,
+  flexDirection: "column",
+  alignItems: "center",
+});
+
+const infoPanelLine1 = new TextRenderable(renderer, {
+  id: "info-line-0",
+  content: "v1.0.0  ·  MIT License",
+  fg: "#6366f1",
+});
+
+const infoPanelLine2 = new TextRenderable(renderer, {
+  id: "info-line-1",
+  content: "──────────────────────",
+  fg: "#7c3aed",
+});
+
+const infoPanelLine3 = new TextRenderable(renderer, {
+  id: "info-line-2",
+  content: "developed & maintained by",
+  fg: "#8b5cf6",
+});
+
+const infoPanelLine4 = new TextRenderable(renderer, {
+  id: "info-line-3",
+  content: " ♡  github / dilukshann7 ♡ ",
+  fg: "#a855f7",
+});
+
+const infoPanelLine5 = new TextRenderable(renderer, {
+  id: "info-line-4",
+  content: " (⌒ made for the public ⌒) ",
+  fg: "#c084fc",
+});
+
+infoPanel.add(infoPanelLine1);
+infoPanel.add(infoPanelLine2);
+infoPanel.add(infoPanelLine3);
+infoPanel.add(infoPanelLine4);
+infoPanel.add(infoPanelLine5);
+renderer.root.add(infoPanel);
 
 const panelDefaults = {
   width: 120,
