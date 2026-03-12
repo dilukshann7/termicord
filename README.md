@@ -10,7 +10,6 @@
 [![Bun](https://img.shields.io/badge/Runtime-Bun-f9a8d4?style=for-the-badge&logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript-8b5cf6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![OpenTUI](https://img.shields.io/badge/UI-OpenTUI-e879f9?style=for-the-badge&logo=zig&logoColor=white)](https://github.com/anomalyco/opentui)
-[![Zig](https://img.shields.io/badge/Powered%20by-Zig-f0abfc?style=for-the-badge&logo=zig&logoColor=white)](https://ziglang.org)
 [![Discord API](https://img.shields.io/badge/Discord-API%20v10-c4b5fd?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/developers/docs/intro)
 
 </div>
