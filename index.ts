@@ -268,9 +268,9 @@ const hintBar = new BoxRenderable(renderer, {
 });
 
 const hintFull =
-  "Q/E · switch tabs  |  Tab · next field  |  Shift+Tab · prev  |  Space · toggle  |  Enter · download  |  Esc · abort  |  Ctrl+C · exit";
+  "Ctrl + Q/E · switch tabs  |  Tab · next field  |  Shift + Tab · prev  |  Space · toggle  |  Enter · download  |  Esc · abort  |  Ctrl+C · exit";
 const hintCompact =
-  "Q/E tabs | Tab/S-Tab nav | Space toggle | Enter go | Esc abort | ^C quit";
+  "Ctrl + Q/E tabs | Tab/S-Tab nav | Space toggle | Enter go | Esc abort | Ctrl+C quit";
 
 const hint = new TextRenderable(renderer, {
   id: "hint",
