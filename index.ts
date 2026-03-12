@@ -450,7 +450,6 @@ renderer.root.on(LayoutEvents.RESIZED, handleResize);
 renderer.keyInput.on("keypress", (key: KeyEvent) => {
   if (!animationDone) return;
 
-  // Only intercept tab-switch keys when no input is focused (avoids eating q/e while typing)
   const anyInputFocused =
     focusedIndex >= 0 && focusedIndex < 4 && activeTab === "config";
 
@@ -465,7 +464,6 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
     }
   }
 
-  // Ctrl+Q / Ctrl+E always switches tabs, even while typing
   if (key.ctrl && (key.name === "q" || key.name === "Q")) {
     showTab("config");
     return;
@@ -475,13 +473,11 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
     return;
   }
 
-  // Escape aborts an active download from any tab
   if (key.name === "escape" && isDownloading) {
     abortDownload();
     return;
   }
 
-  // Config tab controls only
   if (activeTab === "config") {
     if (key.name === "tab") {
       key.stopPropagation();
@@ -492,21 +488,18 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
       checked = !checked;
       checkbox.content = `  [${checked ? "♡" : " "}] Create a new folder for every message`;
     }
-    // Enter on the checkbox also starts download
     if (key.name === "return" && focusedIndex === 4) {
       startDownload();
     }
   }
 });
 
-// Enter on any input field starts download
 const onFieldEnter = () => startDownload();
 tokenInput.on(InputRenderableEvents.ENTER, onFieldEnter);
 channelIDInput.on(InputRenderableEvents.ENTER, onFieldEnter);
 downloadLocationInput.on(InputRenderableEvents.ENTER, onFieldEnter);
 skipFilesInput.on(InputRenderableEvents.ENTER, onFieldEnter);
 
-// Clicking the download button
 downloadButton.onMouseDown = () => {
   if (isDownloading) {
     abortDownload();
