@@ -200,19 +200,21 @@ function onSubmit(value: string) {
   process.exit(0);
 }
 
-tokenInput.on(InputRenderableEvents.CHANGE, (_value) => {});
 tokenInput.on(InputRenderableEvents.ENTER, onSubmit);
-channelIDInput.on(InputRenderableEvents.CHANGE, (_value) => {});
 channelIDInput.on(InputRenderableEvents.ENTER, onSubmit);
-downloadLocationInput.on(InputRenderableEvents.CHANGE, (_value) => {});
 downloadLocationInput.on(InputRenderableEvents.ENTER, onSubmit);
+skipFilesInput.on(InputRenderableEvents.ENTER, onSubmit);
 
 tokenPanel.add(tokenInput);
 channelIDPanel.add(channelIDInput);
 downloadLocationPanel.add(downloadLocationInput);
+skipFilesInputPanel.add(skipFilesInput);
 
 renderer.root.add(titleBanner);
 renderer.root.add(tokenPanel);
 renderer.root.add(channelIDPanel);
 renderer.root.add(downloadLocationPanel);
-renderer.root.add(hint);
+renderer.root.add(skipFilesInputPanel);
+renderer.root.add(checkbox);
+renderer.root.add(hintBar);
+hintBar.add(hint);
