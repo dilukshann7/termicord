@@ -147,7 +147,7 @@ const tokenPanel = new BoxRenderable(renderer, {
   height: 3,
   paddingLeft: 1,
   borderColor: c.violet,
-  title: " ♡ Discord Token ",
+  title: " Discord Token ",
 });
 const channelIDPanel = new BoxRenderable(renderer, {
   id: "channel-id-panel",
@@ -155,7 +155,7 @@ const channelIDPanel = new BoxRenderable(renderer, {
   height: 3,
   paddingLeft: 1,
   borderColor: c.violet,
-  title: " ♡ Channel ID ",
+  title: " Channel ID ",
 });
 const downloadLocationPanel = new BoxRenderable(renderer, {
   id: "download-location-panel",
@@ -163,7 +163,7 @@ const downloadLocationPanel = new BoxRenderable(renderer, {
   height: 3,
   paddingLeft: 1,
   borderColor: c.violet,
-  title: " ♡ Download Location ",
+  title: " Download Location ",
 });
 const skipFilesInputPanel = new BoxRenderable(renderer, {
   id: "skip-files-input-panel",
@@ -171,7 +171,7 @@ const skipFilesInputPanel = new BoxRenderable(renderer, {
   height: 3,
   paddingLeft: 1,
   borderColor: c.violet,
-  title: " ♡ Extensions to Skip ",
+  title: " Extensions to Skip ",
 });
 
 const tokenInput = new InputRenderable(renderer, {
@@ -225,7 +225,7 @@ const downloadButton = new BoxRenderable(renderer, {
 
 const downloadButtonText = new TextRenderable(renderer, {
   id: "download-button-text",
-  content: "  ♡  Start Download  ♡  ",
+  content: "   Start Download   ",
   fg: c.pink,
 });
 
