@@ -466,7 +466,18 @@ export async function runDownload(
       });
 
       try {
-        await downloadBinaryFile(att.url, destPath, headers);
+        await downloadWithRetry(
+          att.url,
+          destPath,
+          headers,
+          3,
+          (attempt, err) => {
+            onProgress({
+              type: "log",
+              message: `    ↻ Retry ${attempt}/2: ${att.filename} — ${err.message}`,
+            });
+          },
+        );
         downloaded++;
         onProgress({
           type: "file_done",
