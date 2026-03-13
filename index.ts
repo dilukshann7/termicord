@@ -1,5 +1,6 @@
 import {
   BoxRenderable,
+  ScrollBoxRenderable,
   createCliRenderer,
   InputRenderable,
   InputRenderableEvents,
@@ -382,42 +383,96 @@ const downloadButton = new BoxRenderable(renderer, {
   justifyContent: "center",
   alignItems: "center",
 });
-
 const downloadButtonText = new TextRenderable(renderer, {
   id: "download-button-text",
   content: "  ♡  Start Download  ♡  ",
   fg: c.pink,
 });
-
 downloadButton.add(downloadButtonText);
 
-const logsBox = new BoxRenderable(renderer, {
+const scrollbarStyle = {
+  trackOptions: {
+    foregroundColor: c.violet,
+    backgroundColor: c.dimBorder,
+  },
+  showArrows: true,
+  arrowOptions: {
+    foregroundColor: c.purple,
+    backgroundColor: c.dimBorder,
+  },
+};
+
+const logsBox = new ScrollBoxRenderable(renderer, {
   id: "logs-box",
   width: "100%" as `${number}%`,
   height: logsHeight(),
   borderStyle: "single",
   borderColor: c.dimBorder,
-  title: " Logs ",
+  title: " Logs  (Ctrl+S to export) ",
   paddingLeft: 1,
   paddingRight: 1,
-  flexDirection: "column",
-  overflow: "scroll",
+  stickyScroll: true,
+  stickyStart: "bottom",
+  scrollbarOptions: scrollbarStyle,
 });
-
 const logsText = new TextRenderable(renderer, {
   id: "logs-text",
   content: "  Waiting for download to start...",
   fg: c.dim,
 });
-
 const progressBarText = new TextRenderable(renderer, {
   id: "progress-bar",
   content: "",
   fg: c.dimGreen,
 });
-
 logsBox.add(logsText);
 logsBox.add(progressBarText);
+
+const historyBox = new ScrollBoxRenderable(renderer, {
+  id: "history-box",
+  width: "100%" as `${number}%`,
+  height: logsHeight(),
+  borderStyle: "single",
+  borderColor: c.dimBorder,
+  title: " Download History ",
+  paddingLeft: 1,
+  paddingRight: 1,
+  scrollbarOptions: scrollbarStyle,
+});
+const historyText = new TextRenderable(renderer, {
+  id: "history-text",
+  content: "  No history yet.",
+  fg: c.dim,
+});
+historyBox.add(historyText);
+
+function renderHistory() {
+  const entries = appConfig.history;
+  if (entries.length === 0) {
+    historyText.content = "  No history yet.";
+    historyText.fg = c.dim;
+    return;
+  }
+  const lines = entries.map((e, i) => {
+    const sizeMb = (e.totalBytes / 1024 / 1024).toFixed(2);
+    const elapsed = (
+      (new Date(e.finishedAt).getTime() - new Date(e.startedAt).getTime()) /
+      1000
+    ).toFixed(1);
+    const status = e.aborted ? "ABORTED" : "DONE";
+    return [
+      `  ─── Run ${entries.length - i} [${status}] ───`,
+      `  Channel  : ${e.channelId}`,
+      `  Output   : ${e.outputDir}`,
+      `  Started  : ${e.startedAt.replace("T", " ").slice(0, 19)}`,
+      `  Files    : ${e.filesDownloaded} downloaded, ${e.skippedFiles} skipped, ${e.failedFiles} failed`,
+      `  Size     : ${sizeMb} MB  |  Elapsed: ${elapsed}s`,
+      "",
+    ].join("\n");
+  });
+  historyText.content = lines.join("");
+  historyText.fg = c.lavender;
+}
 
 const hintBar = new BoxRenderable(renderer, {
   id: "hint-bar",
@@ -741,8 +796,26 @@ function updateProgressBar(downloaded: number, total: number) {
   progressBarText.fg = pct === 100 ? c.green : c.dimGreen;
 }
 
+function exportLog() {
+  const location = downloadLocationInput.value || "./downloads";
+  try {
+    fs.mkdirSync(location, { recursive: true });
+    const now = new Date();
+    const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
+    const logPath = path.join(location, `termicord_${stamp}.log`);
+    fs.writeFileSync(logPath, logLines.join("\n"), "utf8");
+    addLog(`📄 Log exported to: ${logPath}`);
+  } catch (err) {
+    addLog(`✗ Failed to export log: ${(err as Error).message}`);
+  }
+}
+
 let activeDownload: DownloadHandle | null = null;
 let isDownloading = false;
+let _runStartTime = 0;
+let _currentFilesTotal = 0;
+let _currentDownloaded = 0;
+let _currentChannelId = "";
 
 function setDownloading(active: boolean) {
   isDownloading = active;
@@ -959,8 +1032,25 @@ renderer.root.on(LayoutEvents.RESIZED, handleResize);
 renderer.keyInput.on("keypress", (key: KeyEvent) => {
   if (!animationDone) return;
 
+  if (summaryVisible) {
+    hideSummary();
+    return;
+  }
+
+  if (confirmOverlay.visible) {
+    if (key.name === "y" || key.name === "Y") {
+      hideConfirm();
+      pendingDownloadParams?.();
+    } else if (key.name === "n" || key.name === "N" || key.name === "escape") {
+      hideConfirm();
+      addLog("Download cancelled by user.");
+      showTab("logs");
+    }
+    return;
+  }
+
   const anyInputFocused =
-    focusedIndex >= 0 && focusedIndex < 4 && activeTab === "config";
+    focusedIndex < inputs.length && activeTab === "config";
 
   if (focusedIndex === 0 && activeTab === "config") {
     if (key.name === "tab") {
@@ -983,28 +1073,46 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
     ) {
       realTokenValue += key.sequence;
       syncTokenDisplay();
+      saveUIToProfile();
       return;
     }
   }
 
-  if (!anyInputFocused) {
-    if (key.name === "q" || key.name === "Q") {
+  if (!anyInputFocused || key.ctrl) {
+    if (key.ctrl && (key.name === "q" || key.name === "Q")) {
       showTab("config");
       return;
     }
-    if (key.name === "e" || key.name === "E") {
+    if (key.ctrl && (key.name === "e" || key.name === "E")) {
       showTab("logs");
       return;
     }
+    if (key.ctrl && (key.name === "r" || key.name === "R")) {
+      showTab("history");
+      return;
+    }
+
+    if (!anyInputFocused) {
+      if (key.name === "q" || key.name === "Q") {
+        showTab("config");
+        return;
+      }
+      if (key.name === "e" || key.name === "E") {
+        showTab("logs");
+        return;
+      }
+      if (key.name === "r" || key.name === "R") {
+        showTab("history");
+        return;
+      }
+    }
   }
 
-  if (key.ctrl && (key.name === "q" || key.name === "Q")) {
-    showTab("config");
-    return;
-  }
-  if (key.ctrl && (key.name === "e" || key.name === "E")) {
-    showTab("logs");
-    return;
+  if (key.ctrl && (key.name === "s" || key.name === "S")) {
+    if (activeTab === "logs") {
+      exportLog();
+      return;
+    }
   }
 
   if (key.name === "escape") {
