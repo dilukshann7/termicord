@@ -302,7 +302,6 @@ export async function runDownload(
     saveTxt,
   } = config;
 
-  // Validate
   if (!token.trim()) {
     onProgress({ type: "error", message: "✗ Discord token is required." });
     return;
@@ -390,7 +389,7 @@ export async function runDownload(
       break;
     }
 
-    const ts = msg.timestamp.slice(0, 10); // "2025-10-31"
+    const ts = msg.timestamp.slice(0, 10);
     const author = sanitize(msg.author.username);
     const snippet = sanitize(msg.content.slice(0, 40)) || "no-text";
 
