@@ -27,6 +27,7 @@ const c = {
   focus: "#f9a8d4",
   green: "#86efac",
   dimGreen: "#4ade80",
+  yellow: "#fde047",
   transparent: "transparent",
 };
 
@@ -261,7 +262,14 @@ const logsText = new TextRenderable(renderer, {
   fg: c.dim,
 });
 
+const progressBarText = new TextRenderable(renderer, {
+  id: "progress-bar",
+  content: "",
+  fg: c.dimGreen,
+});
+
 logsBox.add(logsText);
+logsBox.add(progressBarText);
 
 const hintBar = new BoxRenderable(renderer, {
   id: "hint-bar",
@@ -376,6 +384,20 @@ function addLog(line: string) {
   logsText.fg = c.green;
 }
 
+function updateProgressBar(downloaded: number, total: number) {
+  if (total === 0) {
+    progressBarText.content = "";
+    return;
+  }
+  const pct = Math.min(100, Math.round((downloaded / total) * 100));
+  const barWidth = Math.max(10, Math.min(50, termW() - 30));
+  const filled = Math.round((pct / 100) * barWidth);
+  const empty = barWidth - filled;
+  const bar = "█".repeat(filled) + "░".repeat(empty);
+  progressBarText.content = `\n  [${bar}] ${pct}%  (${downloaded}/${total} files)`;
+  progressBarText.fg = pct === 100 ? c.green : c.dimGreen;
+}
+
 let activeDownload: DownloadHandle | null = null;
 let isDownloading = false;
 
@@ -433,7 +455,14 @@ function startDownload() {
       foldersPerMessage: checked,
       saveTxt,
     },
-    (line) => addLog(line),
+    (line: string, evt: DownloadProgress) => {
+      addLog(line);
+      if (evt.filesTotal !== undefined) _currentFilesTotal = evt.filesTotal;
+      if (evt.filesDownloaded !== undefined) {
+        _currentDownloaded = evt.filesDownloaded;
+        updateProgressBar(_currentDownloaded, _currentFilesTotal);
+      }
+    },
   );
 
   activeDownload.done.then(() => {
