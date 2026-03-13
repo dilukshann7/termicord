@@ -11,6 +11,16 @@ export interface DownloadConfig {
   skipExtensions: string[]; // e.g. [".jpg", ".png"]
   foldersPerMessage: boolean;
   saveTxt: boolean;
+  filterAuthor: string; // "" = no filter
+  filterDateFrom: string; // "YYYY-MM-DD" or ""
+  filterDateTo: string; // "YYYY-MM-DD" or ""
+  messageLimit: number; // 0 = no limit
+  maxFileSizeKb: number; // 0 = no limit
+  downloadEmbeds: boolean;
+  organiseByType: boolean;
+  deduplicateByHash: boolean;
+  filenameTemplate: string; // "{msgid}_{filename}" etc.
+  resumeAfterMessageId: string; // "" = full fetch
 }
 
 export interface DownloadProgress {
@@ -33,6 +43,10 @@ export interface DownloadProgress {
   currentFile?: string;
   outputDir?: string;
   progress?: number;
+  skippedFiles?: number;
+  failedFiles?: number;
+  totalBytes?: number;
+  elapsedMs?: number;
 }
 
 export type ProgressCallback = (progress: DownloadProgress) => void;
