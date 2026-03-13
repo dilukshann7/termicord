@@ -171,6 +171,7 @@ async function fetchAllMessages(
   channelId: string,
   headers: Record<string, string>,
   onProgress: ProgressCallback,
+  signal?: AbortSignal,
 ): Promise<DiscordMessage[]> {
   const messages: DiscordMessage[] = [];
   let lastId: string | null = null;
@@ -181,6 +182,8 @@ async function fetchAllMessages(
   });
 
   while (true) {
+    if (signal?.aborted) break;
+
     let url = `https://discord.com/api/v10/channels/${channelId}/messages?limit=100`;
     if (lastId) url += `&before=${lastId}`;
 
@@ -320,7 +323,12 @@ export async function runDownload(
     return;
   }
 
-  const messages = await fetchAllMessages(channelId, headers, onProgress);
+  const messages = await fetchAllMessages(
+    channelId,
+    headers,
+    onProgress,
+    signal,
+  );
 
   if (signal?.aborted) {
     onProgress({ type: "log", message: "⊘ Download aborted." });
