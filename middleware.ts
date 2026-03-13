@@ -10,11 +10,24 @@ export type { DownloadProgress };
 
 export interface DownloadConfigRaw {
   token: string;
-  channelId: string;
+  channelId: string; // may be comma-separated list
   outputDir: string;
   skipExtensions: string;
   foldersPerMessage: boolean;
   saveTxt: boolean;
+  // Filters
+  filterAuthor: string;
+  filterDateFrom: string;
+  filterDateTo: string;
+  messageLimit: string; // "" or numeric string
+  // File options
+  maxFileSizeKb: string; // "" or numeric string
+  downloadEmbeds: boolean;
+  organiseByType: boolean;
+  deduplicateByHash: boolean;
+  filenameTemplate: string;
+  // Resume
+  resumeAfterMessageId: string; // "" = full fetch
 }
 
 export interface DownloadHandle {
@@ -36,6 +49,16 @@ export function startDownloadTask(
     skipExtensions: parseSkipExtensions(config.skipExtensions),
     foldersPerMessage: config.foldersPerMessage,
     saveTxt: config.saveTxt,
+    filterAuthor: config.filterAuthor.trim(),
+    filterDateFrom: config.filterDateFrom.trim(),
+    filterDateTo: config.filterDateTo.trim(),
+    messageLimit: parseInt(config.messageLimit) || 0,
+    maxFileSizeKb: parseInt(config.maxFileSizeKb) || 0,
+    downloadEmbeds: config.downloadEmbeds,
+    organiseByType: config.organiseByType,
+    deduplicateByHash: config.deduplicateByHash,
+    filenameTemplate: config.filenameTemplate || "{msgid}_{filename}",
+    resumeAfterMessageId: config.resumeAfterMessageId,
   };
 
   const progressCb: ProgressCallback = (evt) => {
