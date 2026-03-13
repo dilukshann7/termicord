@@ -536,19 +536,77 @@ function updateFocusStyles() {
   inputPanels.forEach((panel, i) => {
     panel.borderColor = focusedIndex === i ? c.focus : c.violet;
   });
-  checkbox.fg = focusedIndex === 4 ? c.focus : c.dim;
-  saveTxtCheckbox.fg = focusedIndex === 5 ? c.focus : c.dim;
+  checkboxRenderables.forEach((cb, i) => {
+    cb.fg = focusedIndex === 10 + i ? c.focus : c.dim;
+  });
 }
 
 function focusAt(index: number) {
   focusedIndex = ((index % TOTAL_FIELDS) + TOTAL_FIELDS) % TOTAL_FIELDS;
-  if (focusedIndex < 4) {
-    inputs.forEach((inp) => inp.blur());
+  inputs.forEach((inp) => inp.blur());
+  if (focusedIndex < inputs.length) {
     inputs[focusedIndex]!.focus();
-  } else {
-    inputs.forEach((inp) => inp.blur());
   }
   updateFocusStyles();
+  const ROW = 3;
+  let targetY: number;
+  if (focusedIndex < inputPanels.length) {
+    targetY = (focusedIndex + 1) * ROW;
+  } else {
+    const cbIdx = focusedIndex - inputPanels.length;
+    targetY = (inputPanels.length + 1) * ROW + cbIdx;
+  }
+  configScrollBox.scrollTo(Math.max(0, targetY - ROW));
+}
+
+function loadProfileIntoUI() {
+  const p = readActiveProfile();
+  realTokenValue = p.token;
+  syncTokenDisplay();
+  channelIDInput.value = p.channelIds;
+  downloadLocationInput.value = p.outputDir;
+  skipFilesInput.value = p.skipExtensions;
+  filterAuthorInput.value = p.filterAuthor;
+  filterDateFromInput.value = p.filterDateFrom;
+  filterDateToInput.value = p.filterDateTo;
+  messageLimitInput.value = p.messageLimit;
+  maxFileSizeInput.value = p.maxFileSizeKb;
+  filenameTemplateInput.value = p.filenameTemplate;
+  checked = p.foldersPerMessage;
+  saveTxt = p.saveTxt;
+  downloadEmbeds = p.downloadEmbeds;
+  organiseByType = p.organiseByType;
+  deduplicateByHash = p.deduplicateByHash;
+  syncCheckboxes();
+  renderProfileBar();
+}
+
+function syncCheckboxes() {
+  checkbox.content = `  [${checked ? "♡" : " "}] Create a new folder for every message`;
+  saveTxtCheckbox.content = `  [${saveTxt ? "♡" : " "}] Save message content as .txt file`;
+  downloadEmbedsCheckbox.content = `  [${downloadEmbeds ? "♡" : " "}] Download embed images`;
+  organiseByTypeCheckbox.content = `  [${organiseByType ? "♡" : " "}] Organise files by type (images/videos/...)`;
+  deduplicateCheckbox.content = `  [${deduplicateByHash ? "♡" : " "}] Deduplicate by content hash`;
+}
+
+function saveUIToProfile() {
+  writeActiveProfile({
+    token: realTokenValue,
+    channelIds: channelIDInput.value ?? "",
+    outputDir: downloadLocationInput.value || "./downloads",
+    skipExtensions: skipFilesInput.value ?? "",
+    filterAuthor: filterAuthorInput.value ?? "",
+    filterDateFrom: filterDateFromInput.value ?? "",
+    filterDateTo: filterDateToInput.value ?? "",
+    messageLimit: messageLimitInput.value ?? "",
+    maxFileSizeKb: maxFileSizeInput.value ?? "",
+    filenameTemplate: filenameTemplateInput.value ?? "{msgid}_{filename}",
+    foldersPerMessage: checked,
+    saveTxt,
+    downloadEmbeds,
+    organiseByType,
+    deduplicateByHash,
+  });
 }
 
 const logLines: string[] = [];
@@ -714,10 +772,12 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
     } else if (key.name === "backspace") {
       realTokenValue = realTokenValue.slice(0, -1);
       syncTokenDisplay();
+      saveUIToProfile();
       return;
     } else if (key.name === "delete") {
       realTokenValue = "";
       syncTokenDisplay();
+      saveUIToProfile();
       return;
     } else if (
       key.sequence &&
@@ -767,19 +827,15 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
       if (focusedIndex === 0 && !key.shift) {
         tokenMasked = true;
         syncTokenDisplay();
-        updateTokenPanelTitle();
       }
       if (focusedIndex === 1 && key.shift) {
         tokenMasked = true;
         syncTokenDisplay();
-        updateTokenPanelTitle();
       }
 
       focusAt(key.shift ? focusedIndex - 1 : focusedIndex + 1);
 
-      if (focusedIndex === 0) {
-        updateTokenPanelTitle();
-      }
+      saveUIToProfile();
       return;
     }
 
@@ -790,29 +846,45 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
     ) {
       tokenMasked = !tokenMasked;
       syncTokenDisplay();
-      updateTokenPanelTitle();
       return;
     }
 
-    if (key.name === "space" && focusedIndex === 4) {
-      checked = !checked;
-      checkbox.content = `  [${checked ? "♡" : " "}] Create a new folder for every message`;
+    if (key.name === "space") {
+      const cbIndex = focusedIndex - 10;
+      if (cbIndex === 0) {
+        checked = !checked;
+      } else if (cbIndex === 1) {
+        saveTxt = !saveTxt;
+      } else if (cbIndex === 2) {
+        downloadEmbeds = !downloadEmbeds;
+      } else if (cbIndex === 3) {
+        organiseByType = !organiseByType;
+      } else if (cbIndex === 4) {
+        deduplicateByHash = !deduplicateByHash;
+      }
+      syncCheckboxes();
+      saveUIToProfile();
     }
-    if (key.name === "space" && focusedIndex === 5) {
-      saveTxt = !saveTxt;
-      saveTxtCheckbox.content = `  [${saveTxt ? "♡" : " "}] Save message content as .txt file`;
-    }
-    if (key.name === "return" && (focusedIndex === 4 || focusedIndex === 5)) {
+
+    if (key.name === "return" && focusedIndex >= 10) {
       startDownload();
+    }
+
+    if (
+      focusedIndex > 0 &&
+      focusedIndex < inputs.length &&
+      key.sequence &&
+      key.sequence.length >= 1 &&
+      !key.ctrl &&
+      !key.meta
+    ) {
+      setTimeout(saveUIToProfile, 50);
     }
   }
 });
 
 const onFieldEnter = () => startDownload();
-tokenInput.on(InputRenderableEvents.ENTER, onFieldEnter);
-channelIDInput.on(InputRenderableEvents.ENTER, onFieldEnter);
-downloadLocationInput.on(InputRenderableEvents.ENTER, onFieldEnter);
-skipFilesInput.on(InputRenderableEvents.ENTER, onFieldEnter);
+inputs.forEach((inp) => inp.on(InputRenderableEvents.ENTER, onFieldEnter));
 
 downloadButton.onMouseDown = () => {
   if (isDownloading) {
@@ -863,64 +935,115 @@ animateBanner(() => {
   }
 
   tabBar.visible = false;
-  configChildren.forEach((child) => {
-    child.visible = false;
-  });
+  configScrollBox.visible = false;
   logsBox.visible = false;
+  historyBox.visible = false;
   downloadButton.visible = false;
   hintBar.visible = false;
+  confirmOverlay.visible = false;
+  summaryOverlay.visible = false;
+
+  configChildren.forEach((child) => {
+    child.visible = false;
+    configScrollBox.add(child);
+  });
 
   renderer.root.add(tabBar);
-  configChildren.forEach((child) => renderer.root.add(child));
+  renderer.root.add(configScrollBox);
   renderer.root.add(logsBox);
+  renderer.root.add(historyBox);
   renderer.root.add(downloadButton);
   renderer.root.add(hintBar);
+  renderer.root.add(confirmOverlay);
+  renderer.root.add(summaryOverlay);
+
+  loadProfileIntoUI();
 
   const pd = 120;
   setTimeout(() => {
     tabBar.visible = true;
   }, pd * 1);
   setTimeout(() => {
-    tokenPanel.visible = true;
+    configScrollBox.visible = true;
   }, pd * 2);
   setTimeout(() => {
-    channelIDPanel.visible = true;
+    profileBar.visible = true;
+  }, pd * 2);
+  setTimeout(() => {
+    tokenPanel.visible = true;
   }, pd * 3);
   setTimeout(() => {
-    downloadLocationPanel.visible = true;
+    channelIDPanel.visible = true;
   }, pd * 4);
   setTimeout(() => {
-    skipFilesInputPanel.visible = true;
+    downloadLocationPanel.visible = true;
   }, pd * 5);
   setTimeout(() => {
-    checkbox.visible = true;
+    skipFilesInputPanel.visible = true;
   }, pd * 6);
+  setTimeout(() => {
+    filterAuthorPanel.visible = true;
+  }, pd * 7);
+  setTimeout(() => {
+    filterDateFromPanel.visible = true;
+  }, pd * 8);
+  setTimeout(() => {
+    filterDateToPanel.visible = true;
+  }, pd * 9);
+  setTimeout(() => {
+    messageLimitPanel.visible = true;
+  }, pd * 10);
+  setTimeout(() => {
+    maxFileSizePanel.visible = true;
+  }, pd * 11);
+  setTimeout(() => {
+    filenameTemplatePanel.visible = true;
+  }, pd * 12);
+  setTimeout(() => {
+    checkbox.visible = true;
+  }, pd * 13);
   setTimeout(
     () => {
       saveTxtCheckbox.visible = true;
     },
-    pd * 6 + 60,
+    pd * 13 + 60,
+  );
+  setTimeout(
+    () => {
+      downloadEmbedsCheckbox.visible = true;
+    },
+    pd * 13 + 120,
+  );
+  setTimeout(
+    () => {
+      organiseByTypeCheckbox.visible = true;
+    },
+    pd * 13 + 180,
+  );
+  setTimeout(
+    () => {
+      deduplicateCheckbox.visible = true;
+    },
+    pd * 13 + 240,
   );
   setTimeout(
     () => {
       downloadButton.visible = true;
     },
-    pd * 6 + 120,
+    pd * 13 + 300,
   );
   setTimeout(
     () => {
       hintBar.visible = true;
     },
-    pd * 6 + 220,
+    pd * 13 + 380,
   );
-
   setTimeout(
     () => {
       animationDone = true;
-      updateTokenPanelTitle();
       focusAt(0);
       handleResize();
     },
-    pd * 6 + 320,
+    pd * 13 + 480,
   );
 });
