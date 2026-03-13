@@ -261,6 +261,29 @@ async function fetchAllMessages(
   return messages;
 }
 
+async function downloadWithRetry(
+  url: string,
+  destPath: string,
+  headers: Record<string, string>,
+  maxRetries = 3,
+  onRetry?: (attempt: number, err: Error) => void,
+): Promise<void> {
+  let lastErr: Error = new Error("Unknown error");
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await downloadBinaryFile(url, destPath, headers);
+      return;
+    } catch (err) {
+      lastErr = err as Error;
+      if (attempt < maxRetries) {
+        onRetry?.(attempt, lastErr);
+        await sleep(attempt * 1000); // 1s, 2s back-off
+      }
+    }
+  }
+  throw lastErr;
+}
+
 export async function runDownload(
   config: DownloadConfig,
   onProgress: ProgressCallback,
