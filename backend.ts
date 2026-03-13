@@ -120,7 +120,8 @@ function downloadBinaryFile(
   destPath: string,
   headers: Record<string, string>,
   redirectsLeft = 5,
-): Promise<void> {
+): Promise<number> {
+  // Returns bytes written
   return new Promise((resolve, reject) => {
     const parsed = new URL(urlStr);
     const mod = parsed.protocol === "https:" ? https : http;
@@ -154,9 +155,13 @@ function downloadBinaryFile(
           reject(new Error(`HTTP ${status}`));
           return;
         }
+        let bytes = 0;
         const stream = fs.createWriteStream(destPath);
+        res.on("data", (chunk: Buffer) => {
+          bytes += chunk.length;
+        });
         res.pipe(stream);
-        stream.on("finish", () => resolve());
+        stream.on("finish", () => resolve(bytes));
         stream.on("error", reject);
       },
     );
