@@ -47,9 +47,10 @@ The entire terminal interface is driven by **`@opentui/core`**, which is built o
 
 - **Sub-millisecond render cycles** via Zig's zero-overhead abstractions
 - **True-color (24-bit) support** — every hex color you see (`#c4b5fd`, `#f0abfc`, etc.) is rendered natively
-- **Composable renderables** — `BoxRenderable`, `TextRenderable`, `InputRenderable` — each a self-contained layout node
+- **Composable renderables** — `BoxRenderable`, `ScrollBoxRenderable`, `TextRenderable`, `InputRenderable` — each a self-contained layout node
+- **Scrollable containers** — `ScrollBoxRenderable` with styled scrollbars, arrow buttons, and sticky-scroll for live log tailing
 - **Event-driven input** — keyboard and mouse events propagate through a typed event bus backed by native I/O
-- **Flex-style layout engine** — `flexDirection`, `justifyContent`, `alignItems`, `overflow: scroll` — a real layout system, not ASCII hacks
+- **Flex-style layout engine** — `flexDirection`, `justifyContent`, `alignItems` — a real layout system, not ASCII hacks
 
 > Zig's `comptime` and manual memory model allow OpenTUI to avoid GC pauses entirely, making the UI feel instant even on low-spec hardware.
 
@@ -62,6 +63,7 @@ termicord/
 ├── index.ts        # TUI shell — all UI logic, layout, key bindings, animation
 ├── middleware.ts   # Thin adapter — bridges raw config from the UI to the backend
 ├── backend.ts      # Core engine — Discord API calls, download logic, abort support
+├── config.ts       # Persistence — profiles, history, channel state, config file I/O
 ├── package.json    # Bun project manifest
 └── tsconfig.json   # TypeScript config
 ```
