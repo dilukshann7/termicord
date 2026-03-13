@@ -836,21 +836,36 @@ function validateFields(
   channel: string,
   location: string,
   skip: string,
+  dateFrom: string,
+  dateTo: string,
 ): string | null {
   if (!token) return "✗ Discord token is required.";
   if (!channel) return "✗ Channel ID is required.";
-  if (!/^\d{17,20}$/.test(channel.trim()))
-    return "✗ Channel ID must be a 17–20 digit numeric snowflake.";
+
+  const ids = channel
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  for (const id of ids) {
+    if (!/^\d{17,20}$/.test(id))
+      return `✗ Channel ID "${id}" must be a 17–20 digit numeric snowflake.`;
+  }
+
   if (location.trim() && /[<>|"?*]/.test(location))
     return "✗ Download location contains invalid characters.";
-  // Warn about wildcard patterns that could confuse the skip parser
   if (/\*[^.\s]/.test(skip))
     return "✗ Extensions to Skip: use plain extensions (e.g. .jpg), not glob patterns.";
+
+  const dateRx = /^\d{4}-\d{2}-\d{2}$/;
+  if (dateFrom && !dateRx.test(dateFrom))
+    return "✗ Date From must be YYYY-MM-DD format.";
+  if (dateTo && !dateRx.test(dateTo))
+    return "✗ Date To must be YYYY-MM-DD format.";
+  if (dateFrom && dateTo && dateFrom > dateTo)
+    return "✗ Date From must be before Date To.";
+
   return null;
 }
-
-let _currentFilesTotal = 0;
-let _currentDownloaded = 0;
 
 function startDownload() {
   if (isDownloading) {
@@ -937,19 +952,37 @@ function executeDownload(
     logLines.push("");
   }
 
-  addLog(`♡ Starting download...`);
+  const ids = channel
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  addLog("♡ Starting download...");
   addLog(
     `  Token    : ${token.slice(0, 8)}${"*".repeat(Math.max(0, token.length - 8))}`,
   );
-  addLog(`  Channel  : ${channel}`);
+  addLog(`  Channel(s): ${ids.join(", ")}`);
   addLog(`  Location : ${location}`);
   addLog(`  Skip ext : ${skip || "(none)"}`);
   addLog(`  Folders  : ${checked ? "yes (one per message)" : "no"}`);
-  addLog(`  Save .txt : ${saveTxt ? "yes" : "no"}`);
-  addLog(`──────────────────────────────────────────────`);
+  addLog(`  Save .txt: ${saveTxt ? "yes" : "no"}`);
+  if (author) addLog(`  Author   : ${author}`);
+  if (dateFrom || dateTo)
+    addLog(`  Dates    : ${dateFrom || "∞"} → ${dateTo || "∞"}`);
+  if (limit) addLog(`  Limit    : ${limit} messages`);
+  if (maxSize) addLog(`  Max size : ${maxSize} KB`);
+  addLog("──────────────────────────────────────────────");
 
   _currentFilesTotal = 0;
   _currentDownloaded = 0;
+  _currentChannelId = ids[0] ?? "";
+  _runStartTime = Date.now();
+
+  const firstChannelState = getChannelState(appConfig, _currentChannelId);
+  const resumeAfterMessageId = firstChannelState?.lastMessageId ?? "";
+
+  const startedAt = new Date().toISOString();
+  let _lastEvt: DownloadProgress | null = null;
 
   showTab("logs");
   setDownloading(true);
@@ -962,9 +995,20 @@ function executeDownload(
       skipExtensions: skip,
       foldersPerMessage: checked,
       saveTxt,
+      filterAuthor: author,
+      filterDateFrom: dateFrom,
+      filterDateTo: dateTo,
+      messageLimit: limit,
+      maxFileSizeKb: maxSize,
+      downloadEmbeds,
+      organiseByType,
+      deduplicateByHash,
+      filenameTemplate: tmpl,
+      resumeAfterMessageId,
     },
     (line: string, evt: DownloadProgress) => {
       addLog(line);
+      _lastEvt = evt;
       if (evt.filesTotal !== undefined) _currentFilesTotal = evt.filesTotal;
       if (evt.filesDownloaded !== undefined) {
         _currentDownloaded = evt.filesDownloaded;
@@ -1018,12 +1062,47 @@ function abortDownload() {
   }
 }
 
+function switchProfile(dir: 1 | -1) {
+  const idx = appConfig.profiles.findIndex(
+    (p) => p.name === appConfig.activeProfile,
+  );
+  const next =
+    (idx + dir + appConfig.profiles.length) % appConfig.profiles.length;
+  appConfig.activeProfile = appConfig.profiles[next]!.name;
+  persistConfig();
+  loadProfileIntoUI();
+}
+
+function newProfile() {
+  const name = `profile${appConfig.profiles.length + 1}`;
+  const p = makeDefaultProfile(name);
+  appConfig = upsertProfile(appConfig, p);
+  appConfig.activeProfile = name;
+  persistConfig();
+  loadProfileIntoUI();
+  addLog(`✓ Created new profile: ${name}`);
+}
+
+function deleteCurrentProfile() {
+  if (appConfig.profiles.length <= 1) {
+    addLog("⚠ Cannot delete the last profile.");
+    return;
+  }
+  const name = appConfig.activeProfile;
+  appConfig = deleteProfile(appConfig, name);
+  persistConfig();
+  loadProfileIntoUI();
+  addLog(`✓ Deleted profile: ${name}`);
+}
+
 function handleResize() {
   if (animationDone) {
     titleBanner.content = getBannerLines().join("\n");
     infoPanel.visible = isWide();
   }
   logsBox.height = logsHeight();
+  historyBox.height = logsHeight();
+  configScrollBox.height = configScrollHeight();
   hint.content = termW() >= 120 ? hintFull : hintCompact;
 }
 
