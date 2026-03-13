@@ -94,7 +94,7 @@ const infoPanel = new BoxRenderable(renderer, {
 
 const infoPanelLine1 = new TextRenderable(renderer, {
   id: "info-line-0",
-  content: "v1.0.0  ·  MIT License",
+  content: "v1.0.2  ·  MIT License",
   fg: c.transparent,
 });
 const infoPanelLine2 = new TextRenderable(renderer, {
@@ -251,7 +251,7 @@ const downloadButton = new BoxRenderable(renderer, {
 
 const downloadButtonText = new TextRenderable(renderer, {
   id: "download-button-text",
-  content: "   Start Download   ",
+  content: "  ♡  Start Download  ♡  ",
   fg: c.pink,
 });
 
@@ -301,9 +301,9 @@ const hintBar = new BoxRenderable(renderer, {
 });
 
 const hintFull =
-  "Ctrl + Q/E · switch tabs  |  Tab · next field  |  Shift + Tab · prev  |  Space · toggle  |  Enter · download  |  Esc · abort  |  Ctrl+C · exit";
+  "Ctrl+Q/E · tabs  |  Tab · next  |  Shift+Tab · prev  |  Space · toggle  |  Enter · download  |  Esc · abort/config  |  Ctrl+C · exit";
 const hintCompact =
-  "Ctrl + Q/E tabs | Tab/S-Tab nav | Space toggle | Enter go | Esc abort | Ctrl+C quit";
+  "Ctrl+Q/E tabs | Tab/S-Tab nav | Space toggle | Enter go | Esc abort | Ctrl+C quit";
 
 const hint = new TextRenderable(renderer, {
   id: "hint",
@@ -351,7 +351,6 @@ function showTab(tab: Tab) {
   }
 }
 
-// 0-3 = inputs, 4 = checkbox, 5 = saveTxtCheckbox
 const TOTAL_FIELDS = 6;
 const inputPanels = [
   tokenPanel,
@@ -381,7 +380,7 @@ function focusAt(index: number) {
   focusedIndex = ((index % TOTAL_FIELDS) + TOTAL_FIELDS) % TOTAL_FIELDS;
   if (focusedIndex < 4) {
     inputs.forEach((inp) => inp.blur());
-    (inputs[focusedIndex] as InputRenderable).focus();
+    inputs[focusedIndex]!.focus();
   } else {
     inputs.forEach((inp) => inp.blur());
   }
@@ -389,6 +388,7 @@ function focusAt(index: number) {
 }
 
 const logLines: string[] = [];
+let runCount = 0;
 
 function addLog(line: string) {
   const now = new Date();
