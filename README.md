@@ -30,14 +30,33 @@ The interface is powered by **[OpenTUI](https://github.com/anomalyco/opentui)**,
 |---|---|
 | **Animated TUI** | Staggered banner + cascading panel reveal on startup |
 | **Bulk Attachment Download** | Fetches every attachment from an entire channel history |
+| **Batch Channels** | Comma-separated list of channel IDs — each processed sequentially into its own subfolder |
 | **Auto Rate-Limit Handling** | Detects Discord 429 responses and backs off automatically |
+| **Message Filtering** | Filter by author (username or ID), date range, and maximum message count |
+| **File Size Filter** | Skip files above a configurable KB threshold |
+| **Embed Media Download** | Optionally download images embedded in Discord messages, not just attachments |
 | **Per-Message Folders** | Optional mode to create one folder per message, named by date + author + snippet |
+| **Organise by File Type** | Auto-sort downloads into `images/`, `videos/`, `documents/`, `archives/`, `other/` |
+| **Content-Hash Deduplication** | SHA-1 fingerprint of first 64 KB skips duplicate files within a run |
+| **Custom Filename Template** | Token-based template: `{msgid}`, `{date}`, `{author}`, `{index}`, `{filename}`, `{ext}` |
+| **Resume / Incremental Sync** | Remembers the last-seen message per channel and only fetches newer ones on re-run |
 | **Extension Filtering** | Skip specific file types (e.g. `.jpg .png .gif`) before any download begins |
+| **Named Profiles** | Save, switch, create, and delete multiple config profiles |
+| **Config Persistence** | All settings auto-saved to `~/.config/termicord/config.json` |
+| **Download History Tab** | Browsable log of past runs with file counts, sizes, and elapsed time |
+| **Confirm Before Download** | Summary overlay before every run — confirm with `Y` or cancel with `N` |
+| **Post-Run Summary** | Overlay after completion showing files downloaded, skipped, failed, size, and elapsed time |
+| **Completion Notification** | Terminal bell + native OS notification (`notify-send` / `osascript` / `msg`) on finish |
 | **Abort Support** | Press `Esc` at any time to cleanly cancel an in-flight download |
-| **Live Log Tab** | Real-time timestamped log output in a scrollable panel |
+| **Live Log Tab** | Real-time timestamped log output with a scrollbar |
+| **Export Log** | `Ctrl+S` on the Logs tab writes a timestamped `.log` file to the output directory |
+| **Scrollable Config** | All config fields scroll cleanly in small terminal windows |
 | **Responsive Layout** | Full-width banner on wide terminals, compact mode on narrow ones |
 | **Mouse Support** | Click the Download button directly |
 | **Duplicate Detection** | Skips files that already exist on disk |
+| **Redirect Following** | Handles 301/302/307/308 redirects during binary downloads |
+| **Retry with Back-off** | Three attempts with 1s/2s back-off; partial files cleaned up on failure |
+| **DM / Thread / Forum Support** | Detects channel type via API and routes correctly |
 
 ---
 
@@ -74,21 +93,29 @@ termicord/
 [ User Input (TUI) ]
         │
         ▼
+[ config.ts: loadConfig() / saveConfig() ]
+   ↳ Reads/writes ~/.config/termicord/config.json
+   ↳ Manages named profiles, download history, channel resume state
+        │
+        ▼
 [ middleware.ts: startDownloadTask() ]
-   ↳ Parses raw string config (extensions, paths)
+   ↳ Parses raw string config (extensions, dates, sizes)
    ↳ Creates AbortController
         │
         ▼
 [ backend.ts: runDownload() ]
-   ↳ Authenticates with Discord API v10
-   ↳ Paginates all messages (100/page, cursor-based)
-   ↳ Filters attachments by extension
-   ↳ Downloads binaries with timeout + retry
+   ↳ Resolves channel type via GET /channels/{id}
+   ↳ Paginates messages (100/page, cursor-based, with resume support)
+   ↳ Applies author / date / size / extension filters
+   ↳ Downloads attachments + embeds with timeout, retry, redirect following
+   ↳ Applies filename template, type-based subdirs, content-hash dedup
    ↳ Emits typed DownloadProgress events
         │
         ▼
-[ index.ts: addLog() → logsText.content ]
+[ index.ts: addLog() → logsBox (ScrollBoxRenderable) ]
    ↳ Timestamped lines rendered live in the Logs tab
+   ↳ Progress bar updated on each file_done event
+   ↳ History entry written to config on completion
 ```
 
 ---
