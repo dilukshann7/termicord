@@ -14,6 +14,25 @@ import {
   type DownloadProgress,
 } from "./middleware";
 
+import {
+  loadConfig,
+  saveConfig,
+  getActiveProfile,
+  upsertProfile,
+  deleteProfile,
+  addHistoryEntry,
+  getChannelState,
+  setChannelState,
+  makeDefaultProfile,
+  type AppConfig,
+  type Profile,
+  type HistoryEntry,
+} from "./config";
+
+import fs from "fs";
+import path from "path";
+import os from "os";
+
 const renderer = await createCliRenderer({ exitOnCtrlC: true });
 
 const c = {
@@ -45,6 +64,26 @@ function isBannerFit(): boolean {
 }
 function logsHeight(): number {
   return Math.max(6, termH() - 13);
+}
+function configScrollHeight(): number {
+  return Math.max(5, termH() - 16);
+}
+
+let appConfig: AppConfig = loadConfig();
+
+function persistConfig() {
+  saveConfig(appConfig);
+}
+
+function readActiveProfile(): Profile {
+  return getActiveProfile(appConfig);
+}
+
+function writeActiveProfile(patch: Partial<Profile>) {
+  const current = readActiveProfile();
+  const updated: Profile = { ...current, ...patch };
+  appConfig = upsertProfile(appConfig, updated);
+  persistConfig();
 }
 
 const bannerLinesFull = [
