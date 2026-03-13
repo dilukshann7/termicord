@@ -32,6 +32,7 @@ export interface DownloadProgress {
   filesTotal?: number;
   currentFile?: string;
   outputDir?: string;
+  progress?: number;
 }
 
 export type ProgressCallback = (progress: DownloadProgress) => void;
@@ -494,8 +495,11 @@ export async function runDownload(
           filesDownloaded: downloaded,
           filesTotal,
           progress: Math.round((downloaded / filesTotal) * 100),
-        } as DownloadProgress & { progress: number });
+        });
       } catch (err) {
+        try {
+          if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+        } catch {}
         onProgress({
           type: "file_fail",
           message: `    ✗ Failed: ${att.filename} — ${(err as Error).message}`,
