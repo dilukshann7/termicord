@@ -179,15 +179,25 @@ const skipFilesInputPanel = new BoxRenderable(renderer, {
   title: " Extensions to Skip ",
 });
 
+let realTokenValue = "";
+let tokenMasked = true;
+
 const tokenInput = new InputRenderable(renderer, {
   id: "token-input",
   width: "100%" as `${number}%`,
   placeholder: "Enter your Discord token...",
 });
+
+function syncTokenDisplay() {
+  tokenInput.value = tokenMasked
+    ? "•".repeat(realTokenValue.length)
+    : realTokenValue;
+}
+
 const channelIDInput = new InputRenderable(renderer, {
   id: "channel-id-input",
   width: "100%" as `${number}%`,
-  placeholder: "Enter channel ID...",
+  placeholder: "Enter channel ID (numeric snowflake)...",
 });
 const downloadLocationInput = new InputRenderable(renderer, {
   id: "download-location-input",
@@ -199,6 +209,10 @@ const skipFilesInput = new InputRenderable(renderer, {
   width: "100%" as `${number}%`,
   placeholder: "Enter file extensions to skip (e.g. .jpg .png)...",
 });
+
+function updateTokenPanelTitle() {
+  tokenPanel.title = tokenMasked ? " Discord Token " : " Discord Token ";
+}
 
 tokenPanel.add(tokenInput);
 channelIDPanel.add(channelIDInput);
@@ -497,6 +511,29 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
   const anyInputFocused =
     focusedIndex >= 0 && focusedIndex < 4 && activeTab === "config";
 
+  if (focusedIndex === 0 && activeTab === "config") {
+    if (key.name === "tab") {
+    } else if (key.ctrl || key.name === "escape" || key.name === "return") {
+    } else if (key.name === "backspace") {
+      realTokenValue = realTokenValue.slice(0, -1);
+      syncTokenDisplay();
+      return;
+    } else if (key.name === "delete") {
+      realTokenValue = "";
+      syncTokenDisplay();
+      return;
+    } else if (
+      key.sequence &&
+      key.sequence.length === 1 &&
+      !key.ctrl &&
+      !key.meta
+    ) {
+      realTokenValue += key.sequence;
+      syncTokenDisplay();
+      return;
+    }
+  }
+
   if (!anyInputFocused) {
     if (key.name === "q" || key.name === "Q") {
       showTab("config");
@@ -517,17 +554,49 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
     return;
   }
 
-  if (key.name === "escape" && isDownloading) {
-    abortDownload();
+  if (key.name === "escape") {
+    if (isDownloading) {
+      abortDownload();
+    } else {
+      showTab("config");
+    }
     return;
   }
 
   if (activeTab === "config") {
     if (key.name === "tab") {
       key.stopPropagation();
+
+      if (focusedIndex === 0 && !key.shift) {
+        tokenMasked = true;
+        syncTokenDisplay();
+        updateTokenPanelTitle();
+      }
+      if (focusedIndex === 1 && key.shift) {
+        tokenMasked = true;
+        syncTokenDisplay();
+        updateTokenPanelTitle();
+      }
+
       focusAt(key.shift ? focusedIndex - 1 : focusedIndex + 1);
+
+      if (focusedIndex === 0) {
+        updateTokenPanelTitle();
+      }
       return;
     }
+
+    if (
+      focusedIndex === 0 &&
+      key.ctrl &&
+      (key.name === "h" || key.name === "t")
+    ) {
+      tokenMasked = !tokenMasked;
+      syncTokenDisplay();
+      updateTokenPanelTitle();
+      return;
+    }
+
     if (key.name === "space" && focusedIndex === 4) {
       checked = !checked;
       checkbox.content = `  [${checked ? "♡" : " "}] Create a new folder for every message`;
@@ -651,6 +720,7 @@ animateBanner(() => {
   setTimeout(
     () => {
       animationDone = true;
+      updateTokenPanelTitle();
       focusAt(0);
       handleResize();
     },
