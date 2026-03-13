@@ -47,6 +47,7 @@ const c = {
   green: "#86efac",
   dimGreen: "#4ade80",
   yellow: "#fde047",
+  red: "#f87171",
   transparent: "transparent",
 };
 
@@ -175,108 +176,202 @@ const tabConfig = new TextRenderable(renderer, {
   content: "  [ Config ]  ",
   fg: c.lavender,
 });
-
 const tabLogs = new TextRenderable(renderer, {
   id: "tab-logs",
   content: "    Logs    ",
   fg: c.dim,
 });
+const tabHistory = new TextRenderable(renderer, {
+  id: "tab-history",
+  content: "    History ",
+  fg: c.dim,
+});
 
 tabBar.add(tabConfig);
 tabBar.add(tabLogs);
+tabBar.add(tabHistory);
 
-const tokenPanel = new BoxRenderable(renderer, {
-  id: "token-panel",
-  width: "100%" as `${number}%`,
-  height: 3,
-  paddingLeft: 1,
-  borderColor: c.violet,
-  title: " Discord Token ",
-});
-const channelIDPanel = new BoxRenderable(renderer, {
-  id: "channel-id-panel",
-  width: "100%" as `${number}%`,
-  height: 3,
-  paddingLeft: 1,
-  borderColor: c.violet,
-  title: " Channel ID ",
-});
-const downloadLocationPanel = new BoxRenderable(renderer, {
-  id: "download-location-panel",
-  width: "100%" as `${number}%`,
-  height: 3,
-  paddingLeft: 1,
-  borderColor: c.violet,
-  title: " Download Location ",
-});
-const skipFilesInputPanel = new BoxRenderable(renderer, {
-  id: "skip-files-input-panel",
-  width: "100%" as `${number}%`,
-  height: 3,
-  paddingLeft: 1,
-  borderColor: c.violet,
-  title: " Extensions to Skip ",
-});
+function makePanel(id: string, title: string): BoxRenderable {
+  return new BoxRenderable(renderer, {
+    id,
+    width: "100%" as `${number}%`,
+    height: 3,
+    paddingLeft: 1,
+    borderColor: c.violet,
+    title,
+  });
+}
+function makeInput(id: string, placeholder: string): InputRenderable {
+  return new InputRenderable(renderer, {
+    id,
+    width: "100%" as `${number}%`,
+    placeholder,
+  });
+}
 
+// Row 0 — Token
+const tokenPanel = makePanel("token-panel", " Discord Token ");
 let realTokenValue = "";
 let tokenMasked = true;
-
-const tokenInput = new InputRenderable(renderer, {
-  id: "token-input",
-  width: "100%" as `${number}%`,
-  placeholder: "Enter your Discord token...",
-});
-
+const tokenInput = makeInput("token-input", "Enter your Discord token...");
 function syncTokenDisplay() {
   tokenInput.value = tokenMasked
     ? "•".repeat(realTokenValue.length)
     : realTokenValue;
 }
-
-const channelIDInput = new InputRenderable(renderer, {
-  id: "channel-id-input",
-  width: "100%" as `${number}%`,
-  placeholder: "Enter channel ID (numeric snowflake)...",
-});
-const downloadLocationInput = new InputRenderable(renderer, {
-  id: "download-location-input",
-  width: "100%" as `${number}%`,
-  placeholder: "Enter download location (e.g. ./downloads)...",
-});
-const skipFilesInput = new InputRenderable(renderer, {
-  id: "skip-files-input",
-  width: "100%" as `${number}%`,
-  placeholder: "Enter file extensions to skip (e.g. .jpg .png)...",
-});
-
-function updateTokenPanelTitle() {
-  tokenPanel.title = tokenMasked ? " Discord Token " : " Discord Token ";
-}
-
 tokenPanel.add(tokenInput);
+
+// Row 1 — Channel ID(s)
+const channelIDPanel = makePanel("channel-id-panel", " Channel ID(s) ");
+const channelIDInput = makeInput(
+  "channel-id-input",
+  "Channel ID (or comma-separated list)...",
+);
 channelIDPanel.add(channelIDInput);
+
+// Row 2 — Download location
+const downloadLocationPanel = makePanel(
+  "download-location-panel",
+  " Download Location ",
+);
+const downloadLocationInput = makeInput(
+  "download-location-input",
+  "Download location (e.g. ./downloads)...",
+);
 downloadLocationPanel.add(downloadLocationInput);
+
+// Row 3 — Skip extensions
+const skipFilesInputPanel = makePanel(
+  "skip-files-input-panel",
+  " Extensions to Skip ",
+);
+const skipFilesInput = makeInput(
+  "skip-files-input",
+  "Extensions to skip (e.g. .jpg .png)...",
+);
 skipFilesInputPanel.add(skipFilesInput);
+
+// Row 4 — Filter author
+const filterAuthorPanel = makePanel(
+  "filter-author-panel",
+  " Filter by Author ",
+);
+const filterAuthorInput = makeInput(
+  "filter-author-input",
+  "Username or user ID (blank = all)...",
+);
+filterAuthorPanel.add(filterAuthorInput);
+
+// Row 5 — Filter date from
+const filterDateFromPanel = makePanel("filter-date-from-panel", " Date From ");
+const filterDateFromInput = makeInput(
+  "filter-date-from-input",
+  "YYYY-MM-DD (blank = no limit)...",
+);
+filterDateFromPanel.add(filterDateFromInput);
+
+// Row 6 — Filter date to
+const filterDateToPanel = makePanel("filter-date-to-panel", " Date To ");
+const filterDateToInput = makeInput(
+  "filter-date-to-input",
+  "YYYY-MM-DD (blank = no limit)...",
+);
+filterDateToPanel.add(filterDateToInput);
+
+// Row 7 — Message limit
+const messageLimitPanel = makePanel("message-limit-panel", " Message Limit ");
+const messageLimitInput = makeInput(
+  "message-limit-input",
+  "Max messages to fetch (blank = all)...",
+);
+messageLimitPanel.add(messageLimitInput);
+
+// Row 8 — Max file size
+const maxFileSizePanel = makePanel(
+  "max-file-size-panel",
+  " Max File Size (KB) ",
+);
+const maxFileSizeInput = makeInput(
+  "max-file-size-input",
+  "Max file size in KB (blank = no limit)...",
+);
+maxFileSizePanel.add(maxFileSizeInput);
+
+// Row 9 — Filename template
+const filenameTemplatePanel = makePanel(
+  "filename-template-panel",
+  " Filename Template ",
+);
+const filenameTemplateInput = makeInput(
+  "filename-template-input",
+  "{msgid}_{filename}  (tokens: {date} {author} {index} {ext})...",
+);
+filenameTemplatePanel.add(filenameTemplateInput);
 
 let checked = false;
 let saveTxt = false;
+let downloadEmbeds = false;
+let organiseByType = false;
+let deduplicateByHash = false;
 
 const checkbox = new TextRenderable(renderer, {
   id: "checkbox",
   content: "  [ ] Create a new folder for every message",
   fg: c.dim,
 });
-
 const saveTxtCheckbox = new TextRenderable(renderer, {
   id: "save-txt-checkbox",
   content: "  [ ] Save message content as .txt file",
   fg: c.dim,
 });
+const downloadEmbedsCheckbox = new TextRenderable(renderer, {
+  id: "embeds-checkbox",
+  content: "  [ ] Download embed images",
+  fg: c.dim,
+});
+const organiseByTypeCheckbox = new TextRenderable(renderer, {
+  id: "organise-checkbox",
+  content: "  [ ] Organise files by type (images/videos/...)",
+  fg: c.dim,
+});
+const deduplicateCheckbox = new TextRenderable(renderer, {
+  id: "dedup-checkbox",
+  content: "  [ ] Deduplicate by content hash",
+  fg: c.dim,
+});
+
+const profileBar = new BoxRenderable(renderer, {
+  id: "profile-bar",
+  width: "100%" as `${number}%`,
+  height: 3,
+  borderStyle: "single",
+  borderColor: c.dimBorder,
+  paddingLeft: 1,
+  paddingRight: 1,
+  flexDirection: "row",
+  alignItems: "center",
+});
+const profileBarText = new TextRenderable(renderer, {
+  id: "profile-bar-text",
+  content: "",
+  fg: c.purple,
+});
+profileBar.add(profileBarText);
+
+function renderProfileBar() {
+  const names = appConfig.profiles.map((p) => p.name);
+  const active = appConfig.activeProfile;
+  const parts = names.map((n) => (n === active ? `[ ${n} ]` : `  ${n}  `));
+  profileBarText.content =
+    "Profile: " +
+    parts.join(" · ") +
+    "  (Ctrl+N new  Ctrl+D del  Ctrl+← → switch)";
+}
 
 const downloadButton = new BoxRenderable(renderer, {
   id: "download-button",
   position: "absolute",
-  bottom: 3, // sits directly on top of the hint bar
+  bottom: 3,
   width: "100%" as `${number}%`,
   height: 3,
   borderStyle: "double",
@@ -370,38 +465,68 @@ function showTab(tab: Tab) {
 
   tabConfig.fg = tab === "config" ? c.lavender : c.dim;
   tabLogs.fg = tab === "logs" ? c.lavender : c.dim;
+  tabHistory.fg = tab === "history" ? c.lavender : c.dim;
+
   tabConfig.content = tab === "config" ? "  [ Config ]  " : "    Config    ";
   tabLogs.content = tab === "logs" ? "  [ Logs ]  " : "    Logs    ";
+  tabHistory.content = tab === "history" ? "  [ History ]  " : "    History ";
 
   if (tab === "config") {
     logsBox.visible = false;
-    configChildren.forEach((child) => {
-      child.visible = true;
-    });
+    historyBox.visible = false;
+    configScrollBox.visible = true;
     downloadButton.visible = true;
     focusAt(0);
-  } else {
-    configChildren.forEach((child) => {
-      child.visible = false;
-    });
+  } else if (tab === "logs") {
+    configScrollBox.visible = false;
     downloadButton.visible = false;
     inputs.forEach((inp) => inp.blur());
     logsBox.visible = true;
+    historyBox.visible = false;
+    logsBox.focus();
+  } else {
+    configScrollBox.visible = false;
+    downloadButton.visible = false;
+    inputs.forEach((inp) => inp.blur());
+    logsBox.visible = false;
+    historyBox.visible = true;
+    renderHistory();
+    historyBox.focus();
   }
 }
 
-const TOTAL_FIELDS = 6;
+const TOTAL_FIELDS = 15;
+
 const inputPanels = [
-  tokenPanel,
-  channelIDPanel,
-  downloadLocationPanel,
-  skipFilesInputPanel,
+  tokenPanel, // 0
+  channelIDPanel, // 1
+  downloadLocationPanel, // 2
+  skipFilesInputPanel, // 3
+  filterAuthorPanel, // 4
+  filterDateFromPanel, // 5
+  filterDateToPanel, // 6
+  messageLimitPanel, // 7
+  maxFileSizePanel, // 8
+  filenameTemplatePanel, // 9
 ];
 const inputs = [
-  tokenInput,
-  channelIDInput,
-  downloadLocationInput,
-  skipFilesInput,
+  tokenInput, // 0
+  channelIDInput, // 1
+  downloadLocationInput, // 2
+  skipFilesInput, // 3
+  filterAuthorInput, // 4
+  filterDateFromInput, // 5
+  filterDateToInput, // 6
+  messageLimitInput, // 7
+  maxFileSizeInput, // 8
+  filenameTemplateInput, // 9
+];
+const checkboxRenderables = [
+  checkbox, // 10
+  saveTxtCheckbox, // 11
+  downloadEmbedsCheckbox, // 12
+  organiseByTypeCheckbox, // 13
+  deduplicateCheckbox, // 14
 ];
 
 let focusedIndex = 0;
