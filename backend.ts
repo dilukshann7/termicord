@@ -231,9 +231,15 @@ async function fetchAllMessages(
 
   while (true) {
     if (signal?.aborted) break;
+    if (messageLimit > 0 && messages.length >= messageLimit) break;
 
-    let url = `https://discord.com/api/v10/channels/${channelId}/messages?limit=100`;
+    const batchSize =
+      messageLimit > 0 ? Math.min(100, messageLimit - messages.length) : 100;
+
+    let url = `https://discord.com/api/v10/channels/${channelId}/messages?limit=${batchSize}`;
     if (lastId) url += `&before=${lastId}`;
+    if (resumeAfterMessageId && !lastId)
+      url += `&after=${resumeAfterMessageId}`;
 
     let resp: HttpResponse;
     try {
@@ -249,7 +255,7 @@ async function fetchAllMessages(
     if (resp.statusCode === 429) {
       let retryAfter = 5;
       try {
-        const json = JSON.parse(resp.body);
+        const json = JSON.parse(resp.body) as { retry_after?: number };
         retryAfter = json.retry_after ?? 5;
       } catch {}
       onProgress({
@@ -267,7 +273,6 @@ async function fetchAllMessages(
       });
       break;
     }
-
     if (resp.statusCode === 403) {
       onProgress({
         type: "error",
@@ -275,7 +280,6 @@ async function fetchAllMessages(
       });
       break;
     }
-
     if (resp.statusCode !== 200) {
       onProgress({
         type: "error",
@@ -286,7 +290,7 @@ async function fetchAllMessages(
 
     let batch: DiscordMessage[];
     try {
-      batch = JSON.parse(resp.body);
+      batch = JSON.parse(resp.body) as DiscordMessage[];
     } catch {
       onProgress({
         type: "error",
