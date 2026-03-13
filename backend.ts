@@ -417,24 +417,31 @@ export async function runDownload(
     if (saveTxt) {
       const txtFileName = `${ts}_${author}_${snippet}.txt`;
       const txtPath = path.join(folderPath, txtFileName);
-      try {
-        const txtContent = [
-          `Message ID : ${msg.id}`,
-          `Timestamp  : ${msg.timestamp}`,
-          `Author     : ${msg.author.username}`,
-          ``,
-          msg.content || "(no text content)",
-        ].join("\n");
-        fs.writeFileSync(txtPath, txtContent, "utf8");
+      if (fs.existsSync(txtPath)) {
         onProgress({
           type: "log",
-          message: `    📄 Saved message text: ${txtFileName}`,
+          message: `    📄 Already exists (txt): ${txtFileName}`,
         });
-      } catch (err) {
-        onProgress({
-          type: "error",
-          message: `    ✗ Failed to save .txt: ${(err as Error).message}`,
-        });
+      } else {
+        try {
+          const txtContent = [
+            `Message ID : ${msg.id}`,
+            `Timestamp  : ${msg.timestamp}`,
+            `Author     : ${msg.author.username}`,
+            ``,
+            msg.content || "(no text content)",
+          ].join("\n");
+          fs.writeFileSync(txtPath, txtContent, "utf8");
+          onProgress({
+            type: "log",
+            message: `    📄 Saved message text: ${txtFileName}`,
+          });
+        } catch (err) {
+          onProgress({
+            type: "error",
+            message: `    ✗ Failed to save .txt: ${(err as Error).message}`,
+          });
+        }
       }
     }
 
