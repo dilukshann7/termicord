@@ -7,6 +7,7 @@ import {
   LayoutEvents,
   TextRenderable,
   type KeyEvent,
+  PasteEvent,
 } from "@opentui/core";
 
 import {
@@ -1105,6 +1106,17 @@ function handleResize() {
 }
 
 renderer.root.on(LayoutEvents.RESIZED, handleResize);
+
+renderer.keyInput.on("paste", (evt: PasteEvent) => {
+  if (!animationDone) return;
+  if (activeTab !== "config") return;
+  if (focusedIndex !== 0) return;
+
+  evt.preventDefault();
+  realTokenValue += evt.text;
+  syncTokenDisplay();
+  saveUIToProfile();
+});
 
 renderer.keyInput.on("keypress", (key: KeyEvent) => {
   if (!animationDone) return;
