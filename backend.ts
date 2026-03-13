@@ -104,6 +104,7 @@ function downloadBinaryFile(
   urlStr: string,
   destPath: string,
   headers: Record<string, string>,
+  redirectsLeft = 5,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const parsed = new URL(urlStr);
@@ -116,8 +117,26 @@ function downloadBinaryFile(
         headers,
       },
       (res) => {
-        if (res.statusCode !== 200) {
-          reject(new Error(`HTTP ${res.statusCode}`));
+        const status = res.statusCode ?? 0;
+
+        if (
+          [301, 302, 303, 307, 308].includes(status) &&
+          res.headers.location
+        ) {
+          if (redirectsLeft <= 0) {
+            reject(new Error("Too many redirects"));
+            return;
+          }
+          const next = new URL(res.headers.location, urlStr).href;
+          res.resume();
+          resolve(
+            downloadBinaryFile(next, destPath, headers, redirectsLeft - 1),
+          );
+          return;
+        }
+
+        if (status !== 200) {
+          reject(new Error(`HTTP ${status}`));
           return;
         }
         const stream = fs.createWriteStream(destPath);
