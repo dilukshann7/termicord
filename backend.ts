@@ -48,6 +48,7 @@ function parseSkipExtensions(raw: string): string[] {
   return raw
     .split(/[\s,]+/)
     .map((e) => e.trim().toLowerCase())
+    .map((e) => e.replace(/^\*\.?/, ""))
     .filter((e) => e.length > 0)
     .map((e) => (e.startsWith(".") ? e : `.${e}`));
 }
