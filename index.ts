@@ -425,8 +425,30 @@ function setDownloading(active: boolean) {
     downloadButtonText.content = "  ♡  Start Download  ♡  ";
     downloadButtonText.fg = c.pink;
     downloadButton.borderColor = c.softPink;
+    updateProgressBar(0, 0);
   }
 }
+
+function validateFields(
+  token: string,
+  channel: string,
+  location: string,
+  skip: string,
+): string | null {
+  if (!token) return "✗ Discord token is required.";
+  if (!channel) return "✗ Channel ID is required.";
+  if (!/^\d{17,20}$/.test(channel.trim()))
+    return "✗ Channel ID must be a 17–20 digit numeric snowflake.";
+  if (location.trim() && /[<>|"?*]/.test(location))
+    return "✗ Download location contains invalid characters.";
+  // Warn about wildcard patterns that could confuse the skip parser
+  if (/\*[^.\s]/.test(skip))
+    return "✗ Extensions to Skip: use plain extensions (e.g. .jpg), not glob patterns.";
+  return null;
+}
+
+let _currentFilesTotal = 0;
+let _currentDownloaded = 0;
 
 function startDownload() {
   if (isDownloading) {
@@ -435,15 +457,23 @@ function startDownload() {
     return;
   }
 
-  const token = (tokenInput as any).value ?? "";
-  const channel = (channelIDInput as any).value ?? "";
-  const location = (downloadLocationInput as any).value || "./downloads";
-  const skip = (skipFilesInput as any).value ?? "";
+  const token = realTokenValue;
+  const channel = channelIDInput.value ?? "";
+  const location = downloadLocationInput.value || "./downloads";
+  const skip = skipFilesInput.value ?? "";
 
-  if (!token || !channel) {
-    addLog("✗ Missing required fields (token and channel ID).");
+  const validationError = validateFields(token, channel, location, skip);
+  if (validationError) {
+    addLog(validationError);
     showTab("logs");
     return;
+  }
+
+  runCount++;
+  if (runCount > 1) {
+    logLines.push("");
+    logLines.push(`  ══════════════ Run #${runCount} ══════════════`);
+    logLines.push("");
   }
 
   addLog(`♡ Starting download...`);
@@ -456,6 +486,9 @@ function startDownload() {
   addLog(`  Folders  : ${checked ? "yes (one per message)" : "no"}`);
   addLog(`  Save .txt : ${saveTxt ? "yes" : "no"}`);
   addLog(`──────────────────────────────────────────────`);
+
+  _currentFilesTotal = 0;
+  _currentDownloaded = 0;
 
   showTab("logs");
   setDownloading(true);
