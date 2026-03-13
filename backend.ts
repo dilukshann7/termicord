@@ -172,6 +172,21 @@ function downloadBinaryFile(
   });
 }
 
+interface DiscordEmbedImage {
+  url?: string;
+  proxy_url?: string;
+  height?: number;
+  width?: number;
+}
+
+interface DiscordEmbed {
+  type?: string;
+  url?: string;
+  image?: DiscordEmbedImage;
+  thumbnail?: DiscordEmbedImage;
+  video?: { url?: string };
+}
+
 interface DiscordAttachment {
   id: string;
   filename: string;
@@ -183,15 +198,28 @@ interface DiscordMessage {
   id: string;
   timestamp: string;
   content: string;
-  author: { username: string };
+  author: { username: string; id: string };
   attachments: DiscordAttachment[];
+  embeds?: DiscordEmbed[];
+}
+
+interface FileRecord {
+  url: string;
+  filename: string;
+  sizeBytes: number; // 0 if unknown (embed)
+  msgId: string;
+  msgDate: string; // YYYY-MM-DD
+  author: string;
+  index: number; // per-message index
 }
 
 async function fetchAllMessages(
   channelId: string,
   headers: Record<string, string>,
   onProgress: ProgressCallback,
-  signal?: AbortSignal,
+  signal: AbortSignal | undefined,
+  resumeAfterMessageId: string,
+  messageLimit: number,
 ): Promise<DiscordMessage[]> {
   const messages: DiscordMessage[] = [];
   let lastId: string | null = null;
