@@ -150,28 +150,59 @@ bun run index.ts
 
 ## Usage
 
-When the TUI launches, you will see four input fields and a checkbox:
+When the TUI launches you will see the **Config** tab with all settings fields. Tab through them, fill in what you need, and press `Enter` or click the Download button.
+
+### Config Fields
 
 | Field | Description |
 |---|---|
-| **Discord Token** | Your user or bot token (`Authorization` header value) |
-| **Channel ID** | The numeric ID of the target channel |
+| **Discord Token** | Your user or bot token (`Authorization` header value) — masked by default |
+| **Channel ID(s)** | One or more numeric channel IDs, comma-separated for batch mode |
 | **Download Location** | Local path where files will be saved (default: `./downloads`) |
 | **Extensions to Skip** | Space or comma-separated extensions to ignore (e.g. `.jpg .gif`) |
-| **Folder per message** | When checked, each message gets its own named subfolder |
+| **Filter by Author** | Username substring or exact user ID — blank means all authors |
+| **Date From / Date To** | Inclusive date range in `YYYY-MM-DD` format — blank means no limit |
+| **Message Limit** | Maximum number of messages to fetch — blank means the full history |
+| **Max File Size (KB)** | Skip files larger than this — blank means no limit |
+| **Filename Template** | Template string for output filenames (see tokens below) |
+| **Folder per message** | Creates one named subfolder per message |
+| **Save .txt** | Saves message text alongside attachments |
+| **Download embed images** | Also downloads images embedded in messages |
+| **Organise by file type** | Sorts files into `images/`, `videos/`, `documents/`, `archives/`, `other/` |
+| **Deduplicate by hash** | Skips files whose content matches something already downloaded this run |
+
+### Filename Template Tokens
+
+| Token | Replaced with |
+|---|---|
+| `{msgid}` | Discord message snowflake ID |
+| `{date}` | Message date (`YYYY-MM-DD`) |
+| `{author}` | Message author username |
+| `{index}` | Per-message file index (zero-padded) |
+| `{filename}` | Original filename without extension |
+| `{ext}` | File extension (without leading dot) |
+
+Default: `{msgid}_{filename}`
 
 ### Keyboard Shortcuts
 
 | Key | Action |
 |---|---|
 | `Tab` | Focus next field |
-| `Shift + Tab` | Focus previous field |
-| `Space` | Toggle the folder-per-message checkbox |
-| `Enter` | Start download (from any field) |
-| `Ctrl + E` | Switch to Logs tab |
-| `Ctrl + Q` | Switch to Config tab |
-| `Esc` | Abort an in-progress download |
-| `Ctrl + C` | Exit the application |
+| `Shift+Tab` | Focus previous field |
+| `Space` | Toggle focused checkbox |
+| `Enter` | Start download (from any field or checkbox) |
+| `Ctrl+Q` | Switch to Config tab |
+| `Ctrl+E` | Switch to Logs tab |
+| `Ctrl+R` | Switch to History tab |
+| `Ctrl+S` | Export log to file (on Logs tab) |
+| `Ctrl+H` / `Ctrl+T` | Toggle token mask |
+| `Ctrl+N` | Create new profile |
+| `Ctrl+D` | Delete current profile |
+| `Ctrl+←` / `Ctrl+→` | Switch between profiles |
+| `Y` / `N` | Confirm / cancel the pre-download dialog |
+| `Esc` | Abort an in-progress download, or return to Config tab |
+| `Ctrl+C` | Exit the application |
 
 ---
 
@@ -179,30 +210,33 @@ When the TUI launches, you will see four input fields and a checkbox:
 
 ### Message Pagination
 
-Discord's API returns a maximum of **100 messages per request**. The backend uses a cursor-based pagination loop — each batch uses the snowflake ID of the last message as the `before` parameter — until an empty page signals the end of history.
+Discord's API returns a maximum of **100 messages per request**. The backend uses cursor-based pagination — each batch uses the snowflake ID of the last message as the `before` parameter — until an empty page signals the end of history. When a resume point is saved, the first request uses `after=` instead to fetch only newer messages.
 
 ### Rate Limiting
 
-When Discord returns a `429 Too Many Requests` response, the backend parses the `retry_after` field from the JSON body and sleeps for exactly that duration before retrying the same request. A 500ms inter-page sleep is also applied proactively.
+When Discord returns a `429 Too Many Requests` response, the backend parses the `retry_after` field from the JSON body and sleeps for exactly that duration before retrying. A 500ms inter-page sleep is applied proactively between all paginated requests.
 
 ### Abort / Cancellation
 
-Every download task receives a standard [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal). The inner loop checks `signal.aborted` before each message and before each file download, so cancellation is clean and immediate.
+Every download task receives a standard [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal). The inner loop checks `signal.aborted` before each message and before each file, so cancellation is clean and immediate with no partial files left on disk.
 
 ### File Safety
 
-Before writing any file, the engine checks `fs.existsSync(destPath)`. If the file already exists, it is skipped with a `↩ Already exists` log line, preventing duplicate downloads across multiple runs.
+Before writing any file, the engine checks `fs.existsSync(destPath)`. If the file already exists it is skipped with an `↩ Already exists` log line. With deduplication enabled, a SHA-1 hash of the first 64 KB is also checked against all files downloaded in the current run.
+
+### Config Persistence
+
+Settings are stored in `~/.config/termicord/config.json` (falls back to `.termicord-config.json` in the working directory if the home directory is not writable). The file is written on every field change, so settings survive crashes. Up to 50 history entries are retained.
 
 ---
 
 ## Security Notes
 
-> ⚠️ **Your Discord token is sensitive.** Treat it like a password.
+> **Your Discord token is sensitive.** Treat it like a password.
 
-- Your token is **never written to disk** by this tool.
-- It is held only in the in-memory TUI input field for the duration of the session.
-- It is transmitted exclusively to `discord.com` over HTTPS.
-- The token field displays characters as-entered (not masked) — run this tool in a private terminal session.
+- Tokens are stored in the config file at rest — use appropriate file permissions (`chmod 600`).
+- The token field is masked by default (`•` bullets). Toggle with `Ctrl+H` or `Ctrl+T`.
+- Tokens are transmitted exclusively to `discord.com` over HTTPS.
 
 **Do not share your token.** Account tokens grant full access to your Discord account. Bot tokens should be scoped to only the required permissions.
 
@@ -210,7 +244,7 @@ Before writing any file, the engine checks `fs.existsSync(destPath)`. If the fil
 
 ## Contributing
 
-Pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change.
+Pull requests are welcome. For major changes please open an issue first to discuss what you would like to change.
 
 ```
 # Fork → clone your fork → create a branch
