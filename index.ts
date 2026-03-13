@@ -132,7 +132,6 @@ const infoPanel = new BoxRenderable(renderer, {
   flexDirection: "column",
   alignItems: "center",
 });
-
 const infoPanelLine1 = new TextRenderable(renderer, {
   id: "info-line-0",
   content: "v1.0.2  ·  MIT License",
@@ -153,7 +152,6 @@ const infoPanelLine4 = new TextRenderable(renderer, {
   content: " ♡  github / dilukshann7 ♡ ",
   fg: c.transparent,
 });
-
 infoPanel.add(infoPanelLine1);
 infoPanel.add(infoPanelLine2);
 infoPanel.add(infoPanelLine3);
