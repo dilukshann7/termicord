@@ -435,28 +435,135 @@ const hintBar = new BoxRenderable(renderer, {
 });
 
 const hintFull =
-  "Ctrl+Q/E · tabs  |  Tab · next  |  Shift+Tab · prev  |  Space · toggle  |  Enter · download  |  Esc · abort/config  |  Ctrl+C · exit";
+  "Ctrl+Q/E/R · tabs  |  Tab · next field  |  Shift+Tab · prev  |  Space · toggle  |  Enter · download  |  Esc · abort/config  |  Ctrl+C · exit";
 const hintCompact =
-  "Ctrl+Q/E tabs | Tab/S-Tab nav | Space toggle | Enter go | Esc abort | Ctrl+C quit";
-
+  "C-Q/E/R tabs | Tab/S-Tab nav | Space toggle | Enter go | Esc abort | C-C quit";
 const hint = new TextRenderable(renderer, {
   id: "hint",
   content: termW() >= 120 ? hintFull : hintCompact,
   fg: c.dim,
 });
-
 hintBar.add(hint);
 
-type Tab = "config" | "logs";
+const confirmOverlay = new BoxRenderable(renderer, {
+  id: "confirm-overlay",
+  position: "absolute",
+  top: 5,
+  width: "80%" as `${number}%`,
+  borderStyle: "double",
+  borderColor: c.yellow,
+  paddingLeft: 2,
+  paddingRight: 2,
+  paddingTop: 1,
+  paddingBottom: 1,
+  flexDirection: "column",
+  alignItems: "flex-start",
+  visible: false,
+});
+const confirmText = new TextRenderable(renderer, {
+  id: "confirm-text",
+  content: "",
+  fg: c.yellow,
+});
+const confirmHint = new TextRenderable(renderer, {
+  id: "confirm-hint",
+  content: "\n  Press Y to confirm  |  N / Esc to cancel",
+  fg: c.dim,
+});
+confirmOverlay.add(confirmText);
+confirmOverlay.add(confirmHint);
+
+let pendingDownloadParams: (() => void) | null = null;
+
+function showConfirm(summary: string, onConfirm: () => void) {
+  confirmText.content = summary;
+  pendingDownloadParams = onConfirm;
+  confirmOverlay.visible = true;
+}
+
+function hideConfirm() {
+  confirmOverlay.visible = false;
+  pendingDownloadParams = null;
+}
+
+const summaryOverlay = new BoxRenderable(renderer, {
+  id: "summary-overlay",
+  position: "absolute",
+  top: 5,
+  width: "80%" as `${number}%`,
+  borderStyle: "double",
+  borderColor: c.green,
+  paddingLeft: 2,
+  paddingRight: 2,
+  paddingTop: 1,
+  paddingBottom: 1,
+  flexDirection: "column",
+  alignItems: "flex-start",
+  visible: false,
+});
+const summaryText = new TextRenderable(renderer, {
+  id: "summary-text",
+  content: "",
+  fg: c.green,
+});
+const summaryHint = new TextRenderable(renderer, {
+  id: "summary-hint",
+  content: "\n  Press any key to dismiss",
+  fg: c.dim,
+});
+summaryOverlay.add(summaryText);
+summaryOverlay.add(summaryHint);
+
+let summaryVisible = false;
+
+function showSummary(evt: DownloadProgress, elapsedMs: number) {
+  const sizeMb = ((evt.totalBytes ?? 0) / 1024 / 1024).toFixed(2);
+  const elapsed = (elapsedMs / 1000).toFixed(1);
+  summaryText.content = [
+    "  ── Download Complete ──",
+    `  Files downloaded : ${evt.filesDownloaded ?? 0}`,
+    `  Files skipped    : ${evt.skippedFiles ?? 0}`,
+    `  Files failed     : ${evt.failedFiles ?? 0}`,
+    `  Total size       : ${sizeMb} MB`,
+    `  Elapsed          : ${elapsed}s`,
+    `  Output           : ${evt.outputDir ?? ""}`,
+  ].join("\n");
+  summaryVisible = true;
+  summaryOverlay.visible = true;
+}
+
+function hideSummary() {
+  summaryVisible = false;
+  summaryOverlay.visible = false;
+}
+
+const configScrollBox = new ScrollBoxRenderable(renderer, {
+  id: "config-scroll-box",
+  width: "100%" as `${number}%`,
+  height: configScrollHeight(),
+  scrollbarOptions: scrollbarStyle,
+});
+
+type Tab = "config" | "logs" | "history";
 let activeTab: Tab = "config";
 
 const configChildren = [
+  profileBar,
   tokenPanel,
   channelIDPanel,
   downloadLocationPanel,
   skipFilesInputPanel,
+  filterAuthorPanel,
+  filterDateFromPanel,
+  filterDateToPanel,
+  messageLimitPanel,
+  maxFileSizePanel,
+  filenameTemplatePanel,
   checkbox,
   saveTxtCheckbox,
+  downloadEmbedsCheckbox,
+  organiseByTypeCheckbox,
+  deduplicateCheckbox,
 ];
 
 function showTab(tab: Tab) {
@@ -683,14 +790,73 @@ function startDownload() {
   const channel = channelIDInput.value ?? "";
   const location = downloadLocationInput.value || "./downloads";
   const skip = skipFilesInput.value ?? "";
+  const dateFrom = filterDateFromInput.value ?? "";
+  const dateTo = filterDateToInput.value ?? "";
+  const author = filterAuthorInput.value ?? "";
+  const limit = messageLimitInput.value ?? "";
+  const maxSize = maxFileSizeInput.value ?? "";
+  const tmpl = filenameTemplateInput.value || "{msgid}_{filename}";
 
-  const validationError = validateFields(token, channel, location, skip);
+  const validationError = validateFields(
+    token,
+    channel,
+    location,
+    skip,
+    dateFrom,
+    dateTo,
+  );
   if (validationError) {
     addLog(validationError);
     showTab("logs");
     return;
   }
 
+  saveUIToProfile();
+
+  const ids = channel
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const summary = [
+    "  Ready to download:",
+    `  Channel(s)   : ${ids.join(", ")}`,
+    `  Output dir   : ${location}`,
+    `  Skip ext     : ${skip || "(none)"}`,
+    `  Author filter: ${author || "(none)"}`,
+    `  Date range   : ${dateFrom || "∞"} → ${dateTo || "∞"}`,
+    `  Msg limit    : ${limit || "unlimited"}`,
+    `  Max size     : ${maxSize ? maxSize + " KB" : "unlimited"}`,
+    `  Embeds       : ${downloadEmbeds ? "yes" : "no"}  |  Organise: ${organiseByType ? "yes" : "no"}  |  Dedup: ${deduplicateByHash ? "yes" : "no"}`,
+  ].join("\n");
+
+  showConfirm(summary, () => {
+    executeDownload(
+      token,
+      channel,
+      location,
+      skip,
+      dateFrom,
+      dateTo,
+      author,
+      limit,
+      maxSize,
+      tmpl,
+    );
+  });
+}
+
+function executeDownload(
+  token: string,
+  channel: string,
+  location: string,
+  skip: string,
+  dateFrom: string,
+  dateTo: string,
+  author: string,
+  limit: string,
+  maxSize: string,
+  tmpl: string,
+) {
   runCount++;
   if (runCount > 1) {
     logLines.push("");
@@ -735,8 +901,38 @@ function startDownload() {
   );
 
   activeDownload.done.then(() => {
+    const elapsedMs = Date.now() - _runStartTime;
     setDownloading(false);
+
+    const wasAborted = activeDownload?.aborted ?? false;
     activeDownload = null;
+
+    if (_currentChannelId && _lastEvt) {
+      appConfig = setChannelState(appConfig, _currentChannelId, {
+        lastMessageId: "",
+        lastRunAt: new Date().toISOString(),
+      });
+    }
+
+    const histEntry: HistoryEntry = {
+      runId: Date.now().toString(),
+      channelId: _currentChannelId,
+      outputDir: path.resolve(location),
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      filesDownloaded: _lastEvt?.filesDownloaded ?? 0,
+      filesTotal: _lastEvt?.filesTotal ?? 0,
+      failedFiles: _lastEvt?.failedFiles ?? 0,
+      skippedFiles: _lastEvt?.skippedFiles ?? 0,
+      totalBytes: _lastEvt?.totalBytes ?? 0,
+      aborted: wasAborted,
+    };
+    appConfig = addHistoryEntry(appConfig, histEntry);
+    persistConfig();
+
+    if (!wasAborted && _lastEvt) {
+      showSummary(_lastEvt, elapsedMs);
+    }
   });
 }
 
@@ -817,6 +1013,23 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
     } else {
       showTab("config");
     }
+    return;
+  }
+
+  if (key.ctrl && key.name === "n") {
+    newProfile();
+    return;
+  }
+  if (key.ctrl && key.name === "d") {
+    deleteCurrentProfile();
+    return;
+  }
+  if (key.ctrl && key.name === "left") {
+    switchProfile(-1);
+    return;
+  }
+  if (key.ctrl && key.name === "right") {
+    switchProfile(1);
     return;
   }
 
