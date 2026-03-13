@@ -2,8 +2,11 @@ import {
   runDownload,
   parseSkipExtensions,
   type DownloadConfig,
+  type DownloadProgress,
   type ProgressCallback,
 } from "./backend";
+
+export type { DownloadProgress };
 
 export interface DownloadConfigRaw {
   token: string;
@@ -22,7 +25,7 @@ export interface DownloadHandle {
 
 export function startDownloadTask(
   config: DownloadConfigRaw,
-  onProgress: (line: string) => void,
+  onProgress: (line: string, evt: DownloadProgress) => void,
 ): DownloadHandle {
   const ac = new AbortController();
 
@@ -36,11 +39,12 @@ export function startDownloadTask(
   };
 
   const progressCb: ProgressCallback = (evt) => {
-    onProgress(evt.message);
+    onProgress(evt.message, evt);
   };
 
   const done = runDownload(resolved, progressCb, ac.signal).catch((err) => {
-    onProgress(`✗ Unexpected error: ${(err as Error).message}`);
+    const errMsg = `✗ Unexpected error: ${(err as Error).message}`;
+    onProgress(errMsg, { type: "error", message: errMsg });
   });
 
   return {

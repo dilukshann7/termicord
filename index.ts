@@ -8,7 +8,11 @@ import {
   type KeyEvent,
 } from "@opentui/core";
 
-import { startDownloadTask, type DownloadHandle } from "./middleware";
+import {
+  startDownloadTask,
+  type DownloadHandle,
+  type DownloadProgress,
+} from "./middleware";
 
 const renderer = await createCliRenderer({ exitOnCtrlC: true });
 
